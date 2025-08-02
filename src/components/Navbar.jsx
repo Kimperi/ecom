@@ -1,16 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { assets } from "../assets/assets";
 import { Link, NavLink } from "react-router-dom";
 
 const Navbar = () => {
+  const [Visible, setVisible] = useState(false);
   return (
     <div className="flex justify-between items-center py-5 font-medium bg-white shadow-sm px-10">
-      {/* Logo on the left */}
       <div className="flex-1">
         <img src={assets.logo} className="w-36" alt="logo" />
       </div>
 
-      {/* Navigation links in the center */}
       <ul className="hidden md:flex gap-8 text-sm text-gray-700 justify-center flex-1 ">
         <li>
           <NavLink
@@ -89,6 +88,66 @@ const Navbar = () => {
             0
           </p>
         </Link>
+        <img
+          src={assets.menu_icon}
+          alt="menu"
+          className="w-5 cursor-pointer md:hidden"
+          onClick={() => setVisible(true)}
+        />
+      </div>
+      <div
+        className={`absolute top-0 left-0 right-0 bottom-0 overflow-hidden bg-white transition-all ${
+          Visible ? "w-full" : "w-0"
+        }`}
+      >
+        <div className="flex flex-col text-gray-600">
+          <div className="flex flex-col gap-4 p-3">
+            <img
+              src={assets.dropdown_icon}
+              className="h-4 rotate-180"
+              alt="dropdown"
+            />
+            <div
+              onClick={() => setVisible(false)}
+              className="flex items-center gap-2 cursor-pointer hover:text-black transition-colors duration-300 border border-gray-300 rounded-lg px-4 py-3 self-start hover:bg-gray-50"
+            >
+              <img
+                src={assets.dropdown_icon}
+                className="h-4 -rotate-180"
+                alt="back arrow"
+              />
+              <p className="font-medium text-gray-700">Back</p>
+            </div>
+            <NavLink
+              className="py-2 pl-6 border-b border-gray-300"
+              to="/"
+              onClick={() => setVisible(false)}
+            >
+              HOME
+            </NavLink>
+            <NavLink
+              className="py-2 pl-6 border-b border-gray-300"
+              to="/collection"
+              onClick={() => setVisible(false)}
+            >
+              COLLECTION
+            </NavLink>
+            <NavLink
+              className="py-2 pl-6 border-b border-gray-300"
+              to="/about"
+              onClick={() => setVisible(false)}
+            >
+              ABOUT
+            </NavLink>
+            <NavLink
+              className="py-2 pl-6 border-b border-gray-300"
+              to="/contact"
+              onClick={() => setVisible(false)}
+            >
+              CONTACT
+            </NavLink>
+          </div>
+        </div>
       </div>
     </div>
   );
