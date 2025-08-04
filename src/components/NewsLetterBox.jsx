@@ -8,7 +8,7 @@ const NewsLetterBox = () => {
   };
 
   return (
-    <div className="text-center">
+    <div className="text-center mx-4 md:mx-6">
       <p className="text-2xl font-medium text-gray-800">
         Subscribe now & get 20% off
       </p>
