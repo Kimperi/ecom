@@ -2,6 +2,16 @@ import React from "react";
 import { assets } from "../assets/assets";
 
 const Hero = () => {
+  const scrollToLatestCollection = () => {
+    const element = document.getElementById("latest-collection");
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col sm:flex-row border border-gray-400 mx-8">
       {/* Hero Left Side */}
@@ -14,10 +24,15 @@ const Hero = () => {
           <h1 className="prata-regular text-3xl sm:py-3 lg:text-5xl leading-relaxed">
             Latest Arrivals
           </h1>
-          <div className="flex items-center gap-2">
-            <p className="font-semibold text-sm md:text-base">SHOP NOW</p>
-            <p className="w-8 md:w-11 h-[1px] bg-[#414141]"></p>
-          </div>
+          <button
+            onClick={scrollToLatestCollection}
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+          >
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-sm md:text-base">SHOP NOW</p>
+              <p className="w-8 md:w-11 h-[1px] bg-[#414141]"></p>
+            </div>
+          </button>
         </div>
       </div>
       {/* Hero Right Side */}
