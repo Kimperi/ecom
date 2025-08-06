@@ -12,6 +12,9 @@ a.active hr {
     font-weight: 400;
     font-style: normal;
   }
+::webkit-scrollbar{
+    display: hidden;
+}
   @media (max-width: 768px) {
     a.active{
         background-color: black;

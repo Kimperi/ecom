@@ -103,7 +103,14 @@ const Collection = () => {
 
     setFilterProducts(filtered);
     console.log("Final filtered products:", filtered.length);
-  }, [selectedCategories, selectedSubCategories, sortBy, products]);
+  }, [
+    selectedCategories,
+    selectedSubCategories,
+    sortBy,
+    products,
+    search,
+    showsearch,
+  ]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
