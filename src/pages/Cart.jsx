@@ -4,10 +4,17 @@ import Title from "../components/Title";
 import { assets } from "../assets/assets";
 import { toast } from "react-toastify";
 import CartTotal from "../components/CartTotal";
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
-  const { cartItems, setCartItems, products, currency, updateQuantity } =
-    useContext(ShopContext);
+  const {
+    cartItems,
+    setCartItems,
+    products,
+    currency,
+    updateQuantity,
+    navigate,
+  } = useContext(ShopContext);
   const [cartData, setCartData] = useState([]);
 
   const handleDeleteItem = (itemId, size, productName) => {
@@ -61,7 +68,7 @@ const Cart = () => {
   }, [cartItems]);
 
   return (
-    <div className="border-t pt-14">
+    <div className="border-t pt-14 flex flex-col items-center">
       <div className="text-2xl mb-3 border-b pb-3 md:mx-25 md:mb-10">
         <Title text1={"YOUR "} text2={"CART"} />
       </div>
@@ -177,7 +184,10 @@ const Cart = () => {
           <div className="w-full sm:w-[450px]">
             <CartTotal />
             <div className="w-full text-end mt-8">
-              <button className="bg-black text-white text-sm my-8 px-8 py-3">
+              <button
+                onClick={() => navigate("/place-order")}
+                className="bg-black text-white text-sm my-8 px-8 py-3 cursor-pointer"
+              >
                 PROCEED TO CHECKOUT
               </button>
             </div>
