@@ -1,11 +1,20 @@
 import React, { useContext } from "react";
 import { ShopContext } from "../context/ShopContext";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const ProductItem = ({ id, image, name, price }) => {
   const { currency } = useContext(ShopContext);
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    // Scroll to top before navigation
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Navigate to the product page
+    navigate(`/product/${id}`);
+  };
+
   return (
-    <Link to={`/product/${id}`}>
+    <div onClick={handleClick} className="cursor-pointer">
       <div className="overflow-hidden">
         <img
           src={image[0]}
@@ -17,7 +26,7 @@ const ProductItem = ({ id, image, name, price }) => {
       <p className="text-sm font-medium">
         {price} {currency}
       </p>
-    </Link>
+    </div>
   );
 };
 
