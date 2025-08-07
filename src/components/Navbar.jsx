@@ -71,19 +71,6 @@ const Navbar = () => {
               className="w-5 cursor-pointer"
             />
           </Link>
-          <div className="group-hover:block hidden absolute  dropdown-menu right-2 bottom -[-3px]">
-            <div className="flex flex-col gap-2 w-36 py-3 px-2 bg-gray-100 rounded-lg">
-              <p className="cursor-pointer hover:text-black transition-colors duration-300">
-                My Profile
-              </p>
-              <p className="cursor-pointer hover:text-black transition-colors duration-300">
-                Orders
-              </p>
-              <p className="cursor-pointer hover:text-black transition-colors duration-300">
-                Logout
-              </p>
-            </div>
-          </div>
         </div>
         <Link to="/cart" className="relative">
           <img

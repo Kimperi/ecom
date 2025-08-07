@@ -9,9 +9,9 @@ const Footer = () => {
           <div>
             <img src={assets.logo} className="mb-5 w-32" alt="" />
             <p className="w-full md:w-2/3 text-gray-600">
-              Lorem Ipsum is simply dummy text of the printing and typesetting
-              industry. Lorem Ipsum has been the industry's standard dummy text
-              ever since the 1500s.
+              At KIMPERI, we blend modern trends with timeless style. Our
+              mission is to offer quality clothing that makes you feel confident
+              and comfortable, every day.
             </p>
           </div>
 
@@ -28,8 +28,8 @@ const Footer = () => {
           <div className=" md:text-left">
             <p className="text-xl font-medium mb-5">GET IN TOUCH</p>
             <ul className="flex flex-col gap-1 text-gray-600">
-              <li>+1-212-456-7890</li>
-              <li>contact@foreveryou.com</li>
+              <li>+212 641672392</li>
+              <li>baeljouhari@gmail.com</li>
             </ul>
           </div>
         </div>

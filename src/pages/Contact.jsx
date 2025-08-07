@@ -7,7 +7,7 @@ const Contact = () => {
   return (
     <div className="mx-8 md:mx-20">
       <div className="text-center text-2xl pt-10 border-t">
-        <Title text1={"CONTACT"} text2={"US"} />
+        <Title text1={"CONTACT "} text2={"US"} />
       </div>
 
       <div className="my-10 flex flex-col justify-center md:flex-row gap-10 mb-28">
@@ -20,12 +20,12 @@ const Contact = () => {
         <div className="flex flex-col justify-center items-start gap-6">
           <p className="font-semibold text-xl text-gray-600">Our Store</p>
           <p className="text-gray-500">
-            54709 Willms Station <br />
-            Suite 350, Washington, DC
+            200 Hay Lirak <br />
+            Suite 350, Missour
           </p>
           <p className="text-gray-500">
-            Tel: (212) 555-0132 <br />
-            Email: admin@forever.com
+            Tel: (212) 641672392 <br />
+            Email: baeljouhari@gmail.com
           </p>
           <p className="font-semibold text-xl text-gray-600">
             Careers at Forever
