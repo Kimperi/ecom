@@ -11,7 +11,7 @@ import About from "./pages/About";
 import Product from "./pages/Product";
 import Orders from "./pages/Orders";
 import Navbar from "./components/Navbar";
-import Footer from "./components/footer";
+import Footer from "./components/Footer";
 import SearchBar from "./components/SearchBar";
 import Login from "./pages/Login";
 import { ToastContainer, toast } from "react-toastify";
