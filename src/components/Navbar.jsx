@@ -99,13 +99,6 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center gap-5 flex-1 justify-end">
-        <img
-          onClick={() => setShowsearch(!showsearch)}
-          src={assets.search_icon}
-          alt="search"
-          className="w-6 cursor-pointer"
-        />
-
         <div className="group relative flex items-center gap-2">
           {userName ? (
             <>
