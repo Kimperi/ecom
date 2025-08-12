@@ -1,4 +1,3 @@
-// src/context/ShopContext.jsx
 import { createContext, useState, useEffect } from "react";
 import { products } from "../assets/assets";
 import { toast } from "react-toastify";
@@ -10,7 +9,7 @@ const ShopContextProvider = ({ children }) => {
   const [search, setSearch] = useState("");
   const [showsearch, setShowsearch] = useState(false);
 
-  // ✅ Load cart from localStorage on first render
+  // ✅ Load cart from localStorage once
   const [cartItems, setCartItems] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("cart") || "{}");
@@ -23,7 +22,9 @@ const ShopContextProvider = ({ children }) => {
 
   // ✅ Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(cartItems));
+    try {
+      localStorage.setItem("cart", JSON.stringify(cartItems));
+    } catch {}
   }, [cartItems]);
 
   const addToCart = async (itemId, size) => {
@@ -40,7 +41,8 @@ const ShopContextProvider = ({ children }) => {
         cartData[itemId][size] = 1;
       }
     } else {
-      cartData[itemId] = { [size]: 1 };
+      cartData[itemId] = {};
+      cartData[itemId][size] = 1;
     }
 
     setCartItems(cartData);

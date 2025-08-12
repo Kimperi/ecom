@@ -1,39 +1,54 @@
 import React, { useState, useContext, useEffect } from "react";
 import { assets } from "../assets/assets";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
 import {
-  getCurrentUser,
+  fetchAuthSession,
   fetchUserAttributes,
   signOut,
 } from "@aws-amplify/auth";
+import { Hub } from "aws-amplify/utils";
 
 const Navbar = () => {
   const [Visible, setVisible] = useState(false);
   const { setShowsearch, showsearch, getCartCount } = useContext(ShopContext);
 
-  // NEW: hold user name
   const [userName, setUserName] = useState("");
+  const navigate = useNavigate();
 
-  // NEW: load user on mount
-  useEffect(() => {
-    async function loadUser() {
-      try {
-        await getCurrentUser(); // throws if no session
-        const attrs = await fetchUserAttributes();
-        setUserName(attrs.name || "");
-      } catch {
+  async function loadUser() {
+    try {
+      const s = await fetchAuthSession();
+      const id = s?.tokens?.idToken;
+      if (!id) {
         setUserName("");
+        return;
       }
+      // try ID token first, then attributes
+      const p = id.payload || {};
+      let name =
+        p.name || p.given_name || p.email || p["cognito:username"] || "";
+
+      if (!name) {
+        const attrs = await fetchUserAttributes().catch(() => ({}));
+        name = attrs?.name || attrs?.given_name || attrs?.email || "";
+      }
+      setUserName(name || "");
+    } catch {
+      setUserName("");
     }
-    loadUser();
+  }
+
+  useEffect(() => {
+    loadUser(); // on mount
+    const un = Hub.listen("auth", () => loadUser()); // on signIn/signOut
+    return () => un();
   }, []);
 
-  // NEW: logout
   async function handleLogout() {
     await signOut();
     setUserName("");
-    window.location.href = "/login";
+    navigate("/", { replace: true });
   }
 
   return (
@@ -54,7 +69,6 @@ const Navbar = () => {
             <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
           </NavLink>
         </li>
-
         <li>
           <NavLink
             to="/collection"
@@ -73,7 +87,6 @@ const Navbar = () => {
             <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
           </NavLink>
         </li>
-
         <li>
           <NavLink
             to="/contact"
@@ -93,7 +106,6 @@ const Navbar = () => {
           className="w-6 cursor-pointer"
         />
 
-        {/* MODIFIED: profile area shows name + logout if logged in */}
         <div className="group relative flex items-center gap-2">
           {userName ? (
             <>
@@ -159,6 +171,7 @@ const Navbar = () => {
               />
               <p className="font-medium text-gray-700">Back</p>
             </div>
+
             <NavLink
               className="py-2 pl-6 border-b border-gray-300"
               to="/"
@@ -188,7 +201,6 @@ const Navbar = () => {
               CONTACT
             </NavLink>
 
-            {/* Optional: show name + logout in mobile drawer */}
             {userName ? (
               <div className="py-2 pl-6 flex items-center gap-3">
                 <span className="text-sm text-gray-700">
