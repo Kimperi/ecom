@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import {
   signIn,
   signUp,
@@ -9,8 +10,10 @@ import {
 } from "@aws-amplify/auth";
 
 const Login = () => {
+  const location = useLocation();
+  const message = location.state?.message;
   const navigate = useNavigate();
-  const [currentState, setCurrentState] = useState("Sign Up"); // "Login" | "Sign Up"
+  const [currentState, setCurrentState] = useState("Login"); // "Login" | "Sign Up"
   const [isConfirmStep, setIsConfirmStep] = useState(false);
   const [isResetStep, setIsResetStep] = useState(false);
 
@@ -98,6 +101,12 @@ const Login = () => {
       onSubmit={isResetStep ? handleConfirmReset : handleSubmit}
       className="flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800"
     >
+      <div className="flex items-center ">
+        {message && (
+          <p className=" text-red-600 text-3xl px-5 py-5">{message}</p>
+        )}
+        {/* your login form here */}
+      </div>
       <div className="inline-flex items-center gap-2 mb-2 mt-10">
         <p className="prata-regular text-3xl">
           {isResetStep

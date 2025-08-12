@@ -12,7 +12,8 @@ import Product from "./pages/Product";
 import Orders from "./pages/Orders";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import SearchBar from "./components/SearchBar";
+import RequireAuth from "./auth/RequiredAuth";
+
 import Login from "./pages/Login";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -22,11 +23,18 @@ const App = () => {
     <div>
       <ToastContainer />
       <Navbar />
-      <SearchBar />
+
       <Routes className="px-4 sm: px-[5vw] md: px-[7vw] lg: px-[9vw]">
         <Route path="/" element={<Home />} />
         <Route path="/place-order" element={<PlaceOrder />} />
-        <Route path="/cart" element={<Cart />} />
+        <Route
+          path="/cart"
+          element={
+            <RequireAuth>
+              <Cart />
+            </RequireAuth>
+          }
+        />
         <Route path="/collection" element={<Collection />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<About />} />
