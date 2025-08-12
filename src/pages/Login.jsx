@@ -1,6 +1,6 @@
+// src/pages/Login.jsx
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   signIn,
   signUp,
@@ -11,8 +11,13 @@ import {
 
 const Login = () => {
   const location = useLocation();
-  const message = location.state?.message;
   const navigate = useNavigate();
+
+  // message passed from RequireAuth (e.g., "You need to log in first")
+  const message = location.state?.message;
+  // where to go after successful login (default to /cart)
+  const redirectTo = location.state?.from || "/cart";
+
   const [currentState, setCurrentState] = useState("Login"); // "Login" | "Sign Up"
   const [isConfirmStep, setIsConfirmStep] = useState(false);
   const [isResetStep, setIsResetStep] = useState(false);
@@ -51,7 +56,8 @@ const Login = () => {
       } else {
         await signIn({ username: email, password });
         setMsg("Signed in successfully.");
-        window.location.href = "/";
+        // ✅ go back to the page that required auth, default to /cart
+        navigate(redirectTo, { replace: true });
       }
     } catch (e) {
       setErr(e?.message || "Something went wrong.");
@@ -101,12 +107,15 @@ const Login = () => {
       onSubmit={isResetStep ? handleConfirmReset : handleSubmit}
       className="flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800"
     >
-      <div className="flex items-center ">
-        {message && (
-          <p className=" text-red-600 text-3xl px-5 py-5">{message}</p>
-        )}
-        {/* your login form here */}
+      <div className="flex items-center">
+        {message &&
+          currentState === "Login" &&
+          !isConfirmStep &&
+          !isResetStep && (
+            <p className="text-red-600 text-3xl px-5 py-5">{message}</p>
+          )}
       </div>
+
       <div className="inline-flex items-center gap-2 mb-2 mt-10">
         <p className="prata-regular text-3xl">
           {isResetStep
@@ -162,9 +171,6 @@ const Login = () => {
 
       {!isResetStep && (
         <div className="w-full flex justify-between text-sm mt-[-8px]">
-          <p className="cursor-pointer" onClick={handleForgotPassword}>
-            Forgot your password?
-          </p>
           {currentState === "Login" ? (
             <p
               onClick={() => {
@@ -188,6 +194,12 @@ const Login = () => {
               className="cursor-pointer"
             >
               Login Here
+            </p>
+          )}
+
+          {currentState === "Login" && (
+            <p className="cursor-pointer" onClick={handleForgotPassword}>
+              Forgot your password?
             </p>
           )}
         </div>
