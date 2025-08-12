@@ -1,51 +1,35 @@
-import React, { useContext } from "react";
+// src/pages/Orders.jsx
+import React from "react";
 import Title from "../components/Title";
-import { ShopContext } from "../context/ShopContext";
+import { Link } from "react-router-dom";
 
 const Orders = () => {
-  const { products, currency } = useContext(ShopContext);
   return (
-    <div className="border-t pt-16 mx-10 md:mx-20">
+    <div className="border-t pt-16 mx-10 md:mx-20 min-h-[60vh]">
       <div className="text-2xl">
-        <Title text1={"MY"} text2={"ORDERS"} />
+        <Title text1="ORDER" text2="CONFIRMED" />
       </div>
 
-      <div>
-        {products.slice(1, 4).map((item, index) => (
-          <div
-            key={index}
-            className="py-4 border-t border-b text-gray-700 flex flex-col gap-3"
-          >
-            <div className="flex items-start gap-6 text-sm">
-              <img className="w-16 sm:w-20" src={item.image[0]} alt="" />
-              <div>
-                <p className="sm:text-base font-medium">{item.name}</p>
-                <div className="flex items-center gap-3 mt-2 text-base text-gray-500 ">
-                  <p className="text-lg">
-                    {currency}
-                    {item.price}
-                  </p>
-                  <p>Quantity: 1</p>
-                  <p>Size: M</p>
-                </div>
-              </div>
-            </div>
-            <p className="mt-2">
-              Date: <span className="text-gray-400">25, Jan 2023</span>
-            </p>
-            <div className="md:w-1/2 flex justify-between">
-              <div className="flex items-center gap-2">
-                <p className="min-w-2 h-2 rounded-full bg-green-500"></p>
-                <p className="text-sm md:text-base">Ready to ship</p>
-              </div>
-              <button className="border px-4 py-2 text-sm font-medium rounded-sm cursor-pointer hover:bg-black hover:text-white">
-                Track Order
-              </button>
-            </div>
-          </div>
-        ))}
+      <div className="mt-6 bg-green-50 border border-green-200 rounded p-6">
+        <p className="text-gray-900 text-lg font-semibold">
+          Your order has been confirmed ✅
+        </p>
+        <p className="text-gray-700 mt-2">
+          Our delivery partner will contact you shortly to arrange delivery.
+          Check your email for the order details.
+        </p>
+      </div>
+
+      <div className="mt-8">
+        <Link
+          to="/"
+          className="inline-block bg-black text-white px-6 py-3 rounded hover:bg-gray-800 transition"
+        >
+          Continue shopping
+        </Link>
       </div>
     </div>
   );
 };
+
 export default Orders;

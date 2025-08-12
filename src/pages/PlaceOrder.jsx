@@ -1,12 +1,18 @@
+// src/pages/PlaceOrder.jsx
 import React, { useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import Title from "../components/Title";
 import CartTotal from "../components/CartTotal";
 import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
+import { placeOrder } from "../lib/placeOrder"; // <-- uses your API URL
 
 function PlaceOrder() {
+  const navigate = useNavigate();
+  const shop = useContext(ShopContext);
+
   const [method, setMethod] = useState("cod");
-  const { navigate } = useContext(ShopContext);
+  const [loading, setLoading] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -28,29 +34,17 @@ function PlaceOrder() {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
   // Check if all fields are filled
-  const isFormValid = () => {
-    return Object.values(formData).every((value) => value.trim() !== "");
-  };
+  const isFormValid = () =>
+    Object.values(formData).every((value) => String(value).trim() !== "");
 
   // Validate form and show errors
   const validateForm = () => {
     const newErrors = {};
-
     if (!formData.firstName.trim())
       newErrors.firstName = "First name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
@@ -68,10 +62,33 @@ function PlaceOrder() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Handle form submission
-  const handlePlaceOrder = () => {
-    if (validateForm()) {
-      navigate("/orders");
+  // Submit: call API Gateway -> Lambda -> SES
+  const handlePlaceOrder = async () => {
+    if (!validateForm()) return;
+
+    // Map your form keys to the Lambda's expected "address" object
+    const address = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone,
+      street: formData.streetAddress, // <- Lambda expects "street"
+      city: formData.city,
+      state: formData.state,
+      zip: formData.zipCode, // <- Lambda expects "zip"
+      country: formData.country,
+    };
+
+    try {
+      setLoading(true);
+      await placeOrder({ address, paymentMethod: method, shop });
+      // Optional: clear cart here if you have a helper (e.g., shop.clearCart?.())
+      navigate("/orders"); // or navigate("/thank-you")
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "Could not place order"); // replace with toast if you use react-toastify
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,6 +99,7 @@ function PlaceOrder() {
         <div className="text-xl sm:text-2xl my-3">
           <Title text1="Delivery" text2="Address" />
         </div>
+
         <div className="flex gap-3">
           <div className="w-full">
             <input
@@ -116,6 +134,7 @@ function PlaceOrder() {
             )}
           </div>
         </div>
+
         <div>
           <input
             type="email"
@@ -132,9 +151,10 @@ function PlaceOrder() {
             <p className="text-red-500 text-xs mt-1">{errors.email}</p>
           )}
         </div>
+
         <div>
           <input
-            type="number"
+            type="text"
             name="phone"
             value={formData.phone}
             onChange={handleInputChange}
@@ -148,6 +168,7 @@ function PlaceOrder() {
             <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
           )}
         </div>
+
         <div>
           <input
             type="text"
@@ -164,6 +185,7 @@ function PlaceOrder() {
             <p className="text-red-500 text-xs mt-1">{errors.streetAddress}</p>
           )}
         </div>
+
         <div className="flex gap-3">
           <div className="w-full">
             <input
@@ -198,10 +220,11 @@ function PlaceOrder() {
             )}
           </div>
         </div>
+
         <div className="flex gap-3">
           <div className="w-full">
             <input
-              type="number"
+              type="text"
               name="zipCode"
               value={formData.zipCode}
               onChange={handleInputChange}
@@ -233,14 +256,16 @@ function PlaceOrder() {
           </div>
         </div>
       </div>
+
       {/*-------------------right side--------------------------*/}
       <div className="w-full sm:w-[480px] mt-8 sm:mt-0 flex flex-col">
         <div className="mt-8 min-w-80">
           <CartTotal />
         </div>
+
         <div className="mt-12">
           <Title text1="Payment" text2="Method" />
-          {/*----------Payment Method--------------*/}
+          {/* Payment Method */}
           <div className="flex gap-3 flex-col lg:flex-row">
             <div
               onClick={() => setMethod("stripe")}
@@ -250,7 +275,7 @@ function PlaceOrder() {
                 className={`min-w-3.5 h-3.5 border rounded-full ${
                   method === "stripe" ? "bg-black" : ""
                 }`}
-              ></p>
+              />
               <img className="h-5 mx-4" src={assets.stripe_logo} alt="stripe" />
             </div>
             <div
@@ -261,7 +286,7 @@ function PlaceOrder() {
                 className={`min-w-3.5 h-3.5 border rounded-full ${
                   method === "paypal" ? "bg-black" : ""
                 }`}
-              ></p>
+              />
               <img className="h-5 mx-4" src={assets.paypal_logo} alt="paypal" />
             </div>
             <div
@@ -272,19 +297,21 @@ function PlaceOrder() {
                 className={`min-w-3.5 h-3.5 border rounded-full ${
                   method === "cod" ? "bg-black" : ""
                 }`}
-              ></p>
+              />
               <p className="text-gray-500 text-sm font-medium mx-4">
                 CASH ON DELIVERY
               </p>
             </div>
           </div>
         </div>
+
         <div className="w-full text-end mt-8">
           <button
             onClick={handlePlaceOrder}
-            className="bg-black text-white px-16 py-3 text-sm cursor-pointer hover:bg-gray-800 transition-all duration-200"
+            disabled={loading || !isFormValid()}
+            className="bg-black text-white px-16 py-3 text-sm cursor-pointer hover:bg-gray-800 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            PLACE ORDER
+            {loading ? "PLACING..." : "PLACE ORDER"}
           </button>
         </div>
       </div>
