@@ -82,8 +82,9 @@ function PlaceOrder() {
     try {
       setLoading(true);
       await placeOrder({ address, paymentMethod: method, shop });
-      // Optional: clear cart here if you have a helper (e.g., shop.clearCart?.())
-      navigate("/orders"); // or navigate("/thank-you")
+      // NEW: clear cart centrally via context, then navigate
+      shop.finishOrder?.();
+      navigate("/orders"); // confirmation page
     } catch (e) {
       console.error(e);
       alert(e.message || "Could not place order"); // replace with toast if you use react-toastify

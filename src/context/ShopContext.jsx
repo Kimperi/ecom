@@ -1,3 +1,4 @@
+// src/context/ShopContext.jsx
 import { createContext, useState, useEffect } from "react";
 import { products } from "../assets/assets";
 import { toast } from "react-toastify";
@@ -62,8 +63,33 @@ const ShopContextProvider = ({ children }) => {
 
   const updateQuantity = async (itemId, size, quantity) => {
     const cartData = structuredClone(cartItems);
-    cartData[itemId][size] = Number(quantity);
+    const qty = Number(quantity) || 0;
+
+    if (!cartData[itemId]) cartData[itemId] = {};
+
+    if (qty <= 0) {
+      // remove that size; if empty, remove the item
+      delete cartData[itemId][size];
+      if (!Object.keys(cartData[itemId]).length) delete cartData[itemId];
+    } else {
+      cartData[itemId][size] = qty;
+    }
+
     setCartItems(cartData);
+  };
+
+  // NEW: clear cart
+  const clearCart = () => {
+    setCartItems({});
+    try {
+      localStorage.setItem("cart", JSON.stringify({}));
+    } catch {}
+  };
+
+  // NEW: finish order helper (clear + any future logic)
+  const finishOrder = () => {
+    clearCart();
+    // you can add a toast/log here later
   };
 
   const currency = "MAD ";
@@ -82,6 +108,8 @@ const ShopContextProvider = ({ children }) => {
     addToCart,
     getCartCount,
     updateQuantity,
+    clearCart, // <-- exposed
+    finishOrder, // <-- exposed
     navigate,
   };
 
