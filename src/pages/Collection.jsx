@@ -113,7 +113,7 @@ const Collection = () => {
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
-      <div className="min-w-60">
+      <div className="min-w-60 md:ml-4 ml-2">
         <p
           className="my-2 text-xl flex items-center cursor-pointer gap-2 my-5 ml-6"
           onClick={() => setShowFilter(!showFilter)}
