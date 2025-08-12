@@ -16,7 +16,7 @@ const Orders = () => {
         </p>
         <p className="text-gray-700 mt-2">
           Our delivery partner will contact you shortly to arrange delivery.
-          Check your email for the order details.
+          Thank you for your Order :)
         </p>
       </div>
 
