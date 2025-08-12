@@ -61,20 +61,11 @@ const ShopContextProvider = ({ children }) => {
     return count;
   };
 
-  const updateQuantity = async (itemId, size, quantity) => {
+  const updateQuantity = (itemId, size, quantity) => {
+    const q = Math.max(1, Number(quantity) || 1); // clamp to 1
     const cartData = structuredClone(cartItems);
-    const qty = Number(quantity) || 0;
-
     if (!cartData[itemId]) cartData[itemId] = {};
-
-    if (qty <= 0) {
-      // remove that size; if empty, remove the item
-      delete cartData[itemId][size];
-      if (!Object.keys(cartData[itemId]).length) delete cartData[itemId];
-    } else {
-      cartData[itemId][size] = qty;
-    }
-
+    cartData[itemId][size] = q;
     setCartItems(cartData);
   };
 
