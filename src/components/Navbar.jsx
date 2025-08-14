@@ -148,11 +148,6 @@ const Navbar = () => {
       >
         <div className="flex flex-col text-gray-600">
           <div className="flex flex-col gap-4 p-3">
-            <img
-              src={assets.dropdown_icon}
-              className="h-4 rotate-180"
-              alt="dropdown"
-            />
             <div
               onClick={() => setVisible(false)}
               className="flex items-center gap-2 cursor-pointer hover:text-black transition-colors duration-300 border border-gray-300 rounded-lg px-4 py-3 self-start hover:bg-gray-50"
