@@ -5,7 +5,7 @@ import Title from "../components/Title";
 import ProductItem from "../components/ProductItem";
 
 const Collection = () => {
-  const { products, search, showsearch } = useContext(ShopContext);
+  const { products } = useContext(ShopContext);
   const [showFilter, setShowFilter] = useState(false);
   const [filterProducts, setFilterProducts] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([
@@ -42,9 +42,8 @@ const Collection = () => {
   };
 
   const sortProducts = (e) => {
-    const sortValue = e.target.value;
-    setSortBy(sortValue);
-    console.log(sortValue);
+    e.target.value;
+    setSortBy(e.target.value);
   };
 
   useEffect(() => {
@@ -66,15 +65,6 @@ const Collection = () => {
     console.log("Selected categories:", selectedCategories);
     console.log("Selected subcategories:", selectedSubCategories);
     console.log("Sort by:", sortBy);
-    console.log("Search term:", search);
-    console.log("Show search:", showsearch);
-
-    // Filter by search term if search is active and has content
-    if (showsearch && search) {
-      filtered = filtered.filter((item) =>
-        item.name.toLowerCase().includes(search.toLowerCase())
-      );
-    }
 
     // Filter by categories if any selected
     if (selectedCategories.length > 0) {
@@ -102,14 +92,7 @@ const Collection = () => {
 
     setFilterProducts(filtered);
     console.log("Final filtered products:", filtered.length);
-  }, [
-    selectedCategories,
-    selectedSubCategories,
-    sortBy,
-    products,
-    search,
-    showsearch,
-  ]);
+  }, [selectedCategories, selectedSubCategories, sortBy, products]);
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">

@@ -7,9 +7,6 @@ import { useNavigate } from "react-router-dom";
 export const ShopContext = createContext();
 
 const ShopContextProvider = ({ children }) => {
-  const [search, setSearch] = useState("");
-  const [showsearch, setShowsearch] = useState(false);
-
   // ✅ Load cart from localStorage once
   const [cartItems, setCartItems] = useState(() => {
     try {
@@ -28,7 +25,7 @@ const ShopContextProvider = ({ children }) => {
     } catch {}
   }, [cartItems]);
 
-  const addToCart = async (itemId, size) => {
+  const addToCart = (itemId, size) => {
     if (!size) {
       toast.error("Please select a size");
       return;
@@ -80,7 +77,6 @@ const ShopContextProvider = ({ children }) => {
   // NEW: finish order helper (clear + any future logic)
   const finishOrder = () => {
     clearCart();
-    // you can add a toast/log here later
   };
 
   const currency = "MAD ";
@@ -90,10 +86,6 @@ const ShopContextProvider = ({ children }) => {
     products,
     currency,
     deliveryFee,
-    search,
-    setSearch,
-    showsearch,
-    setShowsearch,
     cartItems,
     setCartItems,
     addToCart,

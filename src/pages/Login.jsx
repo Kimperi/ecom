@@ -15,8 +15,8 @@ const Login = () => {
 
   // message passed from RequireAuth (e.g., "You need to log in first")
   const message = location.state?.message;
-  // where to go after successful login (default to /cart)
-  const redirectTo = location.state?.from || "/cart";
+  // where to go after successful login
+  const redirectTo = location.state?.from || "/";
 
   const [currentState, setCurrentState] = useState("Login"); // "Login" | "Sign Up"
   const [isConfirmStep, setIsConfirmStep] = useState(false);
