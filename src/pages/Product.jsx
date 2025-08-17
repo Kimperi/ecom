@@ -6,7 +6,6 @@ import { assets } from "../assets/assets";
 import RelatedProduct from "../components/RelatedProduct";
 import { fetchAuthSession } from "@aws-amplify/auth";
 
-// Your API Gateway HTTP API invoke URL (with $default stage)
 const REVIEWS_API =
   "https://87nhgr1ouh.execute-api.us-east-1.amazonaws.com/reviews";
 
@@ -18,14 +17,12 @@ export default function Product() {
   const [image, setImage] = useState("");
   const [size, setSize] = useState("");
 
-  // Auth + Reviews state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
 
-  // Form auto-filled with Cognito user name
   const [form, setForm] = useState({
     name: "Anonymous",
     rating: 5,
@@ -130,7 +127,6 @@ export default function Product() {
       }
 
       const created = await res.json();
-      // optimistic prepend (or call await loadReviews();)
       setReviews((r) => [created, ...r]);
       setForm((f) => ({ ...f, comment: "", rating: 5 }));
     } catch (err) {
@@ -158,7 +154,6 @@ export default function Product() {
   }, [productId]);
 
   useEffect(() => {
-    // set login state + prefill name
     fetchAuthSession()
       .then((s) => setIsLoggedIn(!!s.tokens?.idToken))
       .catch(() => setIsLoggedIn(false));
@@ -170,9 +165,9 @@ export default function Product() {
 
   return (
     <div className="border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100 mx-10">
-      {/* Product Data */}
+      {/* --- Product Details --- */}
       <div className="flex gap-12 sm:gap-12 flex-col sm:flex-row">
-        {/* Product Images */}
+        {/* Product Images (unchanged) */}
         <div className="flex-1 flex flex-col-reverse gap-3 sm:flex-row">
           <div className="flex sm:flex-col overflow-x-auto sm:overflow-hidden justify-between sm:justify-normal sm:w-[18,7%] h-full">
             {productData.image.map((item, index) => (
@@ -249,99 +244,103 @@ export default function Product() {
         </div>
       </div>
 
-      {/* --- Description & Reviews --- */}
-      <div className="mt-10 md:absolute md:left-0 md:ml-5 md:top-210">
-        <div className="flex">
-          <b className="border px-5 py-3 text-sm">Description</b>
-          <b className="border px-5 py-3 text-sm">Reviews ({reviews.length})</b>
-        </div>
-
+      {/* --- Description + Reviews --- */}
+      <div className="md:absolute md:top-210 grid grid-cols-1 md:grid-cols-2 gap-8 mx-5 mt-10 mb-10">
         {/* Description */}
-        <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
-          <p>{productData.description}</p>
+        <div>
+          <h3 className="font-semibold border-b pb-2 mb-3">Description</h3>
+          <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
+            <p>{productData.description}</p>
+          </div>
         </div>
 
-        {/* Review form (only when logged in) */}
-        {isLoggedIn ? (
-          <form
-            onSubmit={submitReview}
-            className="border mt-4 p-4 rounded-md flex flex-col gap-3 md:w-[640px]"
-          >
-            <h3 className="font-semibold">Write a review</h3>
-            {error && <p className="text-red-600 text-sm">{error}</p>}
+        {/* Reviews */}
+        <div>
+          <h3 className="font-semibold border-b pb-2 mb-3">
+            Reviews ({reviews.length})
+          </h3>
 
-            <div className="flex gap-3 items-center">
-              <input
-                className="border px-3 py-2 w-1/2 bg-gray-100"
-                value={form.name}
-                readOnly
-                title="Name pulled from your Cognito profile"
-              />
-              <select
-                className="border px-3 py-2"
-                value={form.rating}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, rating: Number(e.target.value) }))
-                }
-              >
-                {[5, 4, 3, 2, 1].map((v) => (
-                  <option key={v} value={v}>
-                    {v} star{v > 1 ? "s" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <textarea
-              className="border px-3 py-2 min-h-24"
-              placeholder="Share details about quality, fit, etc."
-              value={form.comment}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, comment: e.target.value }))
-              }
-            />
-
-            <button
-              type="submit"
-              disabled={posting}
-              className="self-start bg-black text-white px-5 py-2 text-sm disabled:opacity-60"
+          {/* Review form */}
+          {isLoggedIn ? (
+            <form
+              onSubmit={submitReview}
+              className="border p-4 rounded-md flex flex-col gap-3"
             >
-              {posting ? "Submitting..." : "Submit review"}
-            </button>
-          </form>
-        ) : (
-          <div className="border mt-4 p-4 rounded-md md:w-[640px]">
-            <p className="text-sm text-red-600">
-              Please log in to write a review.
-            </p>
-          </div>
-        )}
+              <h4 className="font-semibold">Write a review</h4>
+              {error && <p className="text-red-600 text-sm">{error}</p>}
 
-        {/* Reviews list */}
-        <div className="border mt-4 p-4 rounded-md md:w-[640px]">
-          <h3 className="font-semibold mb-2">Customer reviews</h3>
-          {loadingReviews ? (
-            <p className="text-sm text-gray-500">Loading…</p>
-          ) : reviews.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              No reviews yet. Be the first!
-            </p>
+              <div className="flex gap-3 items-center">
+                <input
+                  className="border px-3 py-2 w-1/2 bg-gray-100"
+                  value={form.name}
+                  readOnly
+                />
+                <select
+                  className="border px-3 py-2"
+                  value={form.rating}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, rating: Number(e.target.value) }))
+                  }
+                >
+                  {[5, 4, 3, 2, 1].map((v) => (
+                    <option key={v} value={v}>
+                      {v} star{v > 1 ? "s" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <textarea
+                className="border px-3 py-2 min-h-24"
+                placeholder="Share details about quality, fit, etc."
+                value={form.comment}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, comment: e.target.value }))
+                }
+              />
+
+              <button
+                type="submit"
+                disabled={posting}
+                className="self-start bg-black text-white px-5 py-2 text-sm disabled:opacity-60"
+              >
+                {posting ? "Submitting..." : "Submit review"}
+              </button>
+            </form>
           ) : (
-            <ul className="flex flex-col gap-4">
-              {reviews.map((r) => (
-                <li key={r.reviewId} className="border-b pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex">{renderStars(r.rating)}</div>
-                    <span className="text-sm text-gray-600">
-                      {r.name || "Anonymous"} ·{" "}
-                      {new Date(r.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {r.comment && <p className="text-sm mt-1">{r.comment}</p>}
-                </li>
-              ))}
-            </ul>
+            <div className="border p-4 rounded-md">
+              <p className="text-sm text-red-600">
+                Please log in to write a review.
+              </p>
+            </div>
           )}
+
+          {/* Reviews list */}
+          <div className="border mt-4 p-4 rounded-md">
+            <h4 className="font-semibold mb-2">Customer reviews</h4>
+            {loadingReviews ? (
+              <p className="text-sm text-gray-500">Loading…</p>
+            ) : reviews.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No reviews yet. Be the first!
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-4">
+                {reviews.map((r) => (
+                  <li key={r.reviewId} className="border-b pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex">{renderStars(r.rating)}</div>
+                      <span className="text-sm text-gray-600">
+                        {r.name || "Anonymous"} ·{" "}
+                        {new Date(r.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {r.comment && <p className="text-sm mt-1">{r.comment}</p>}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 
