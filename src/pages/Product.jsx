@@ -6,6 +6,7 @@ import { assets } from "../assets/assets";
 import RelatedProduct from "../components/RelatedProduct";
 import { fetchAuthSession } from "@aws-amplify/auth";
 
+// Your API Gateway HTTP API invoke URL (with $default stage)
 const REVIEWS_API =
   "https://87nhgr1ouh.execute-api.us-east-1.amazonaws.com/reviews";
 
@@ -17,7 +18,8 @@ export default function Product() {
   const [image, setImage] = useState("");
   const [size, setSize] = useState("");
 
-  // --- Reviews state ---
+  // Auth + Reviews state
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [reviews, setReviews] = useState([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
   const [posting, setPosting] = useState(false);
@@ -30,7 +32,7 @@ export default function Product() {
     comment: "",
   });
 
-  // ===== Helpers =====
+  // ----- helpers -----
   const renderStars = (value) => {
     const full = Math.floor(value);
     return new Array(5)
@@ -49,7 +51,6 @@ export default function Product() {
     try {
       const session = await fetchAuthSession();
       const payload = session.tokens?.idToken?.payload || {};
-      // choose best available field
       return payload.name || payload.given_name || payload.email || "Anonymous";
     } catch {
       return "Anonymous";
@@ -66,7 +67,7 @@ export default function Product() {
     }
   };
 
-  // ===== Data loaders =====
+  // ----- data loaders -----
   const fetchProductData = () => {
     for (const item of products) {
       if (item._id === productId) {
@@ -105,14 +106,11 @@ export default function Product() {
     try {
       setPosting(true);
       const url = `${REVIEWS_API}?productId=${encodeURIComponent(productId)}`;
-
       const auth = await getAuthHeaderIfAny();
+
       const res = await fetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...auth, // harmless if empty; needed if your API requires JWT
-        },
+        headers: { "Content-Type": "application/json", ...auth },
         body: JSON.stringify({
           name: form.name || "Anonymous",
           rating: Number(form.rating),
@@ -120,28 +118,37 @@ export default function Product() {
         }),
       });
 
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        let msg = `HTTP ${res.status}`;
+        try {
+          const j = await res.json();
+          if (j?.error) msg = j.error;
+        } catch {}
+        if (res.status === 401) msg = "Please log in to write a review.";
+        if (res.status === 409) msg = "You already reviewed this product.";
+        throw new Error(msg);
+      }
 
       const created = await res.json();
-      // optimistic prepend
+      // optimistic prepend (or call await loadReviews();)
       setReviews((r) => [created, ...r]);
       setForm((f) => ({ ...f, comment: "", rating: 5 }));
     } catch (err) {
       console.error(err);
-      setError("Could not submit review. Please try again.");
+      setError(err.message || "Could not submit review. Please try again.");
     } finally {
       setPosting(false);
     }
   };
 
-  // ===== Derived =====
+  // ----- derived -----
   const avgRating = useMemo(() => {
     if (!reviews.length) return 0;
     const sum = reviews.reduce((s, r) => s + Number(r.rating || 0), 0);
-    return Math.round((sum / reviews.length) * 10) / 10; // 4.5 style
+    return Math.round((sum / reviews.length) * 10) / 10;
   }, [reviews]);
 
-  // ===== Effects =====
+  // ----- effects -----
   useEffect(() => {
     fetchProductData();
   }, [productId, products]);
@@ -151,11 +158,14 @@ export default function Product() {
   }, [productId]);
 
   useEffect(() => {
-    // prefill name from Cognito
+    // set login state + prefill name
+    fetchAuthSession()
+      .then((s) => setIsLoggedIn(!!s.tokens?.idToken))
+      .catch(() => setIsLoggedIn(false));
     getUserNameFromCognito().then((name) => setForm((f) => ({ ...f, name })));
   }, []);
 
-  // ===== Render =====
+  // ----- render -----
   if (!productData) return <div className="opacity-0"></div>;
 
   return (
@@ -251,53 +261,61 @@ export default function Product() {
           <p>{productData.description}</p>
         </div>
 
-        {/* Review form */}
-        <form
-          onSubmit={submitReview}
-          className="border mt-4 p-4 rounded-md flex flex-col gap-3 md:w-[640px]"
-        >
-          <h3 className="font-semibold">Write a review</h3>
-          {error && <p className="text-red-600 text-sm">{error}</p>}
-
-          <div className="flex gap-3 items-center">
-            <input
-              className="border px-3 py-2 w-1/2 bg-gray-100"
-              value={form.name}
-              readOnly
-              title="Name pulled from your Cognito profile"
-            />
-            <select
-              className="border px-3 py-2"
-              value={form.rating}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, rating: Number(e.target.value) }))
-              }
-            >
-              {[5, 4, 3, 2, 1].map((v) => (
-                <option key={v} value={v}>
-                  {v} star{v > 1 ? "s" : ""}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <textarea
-            className="border px-3 py-2 min-h-24"
-            placeholder="Share details about quality, fit, etc."
-            value={form.comment}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, comment: e.target.value }))
-            }
-          />
-
-          <button
-            type="submit"
-            disabled={posting}
-            className="self-start bg-black text-white px-5 py-2 text-sm disabled:opacity-60"
+        {/* Review form (only when logged in) */}
+        {isLoggedIn ? (
+          <form
+            onSubmit={submitReview}
+            className="border mt-4 p-4 rounded-md flex flex-col gap-3 md:w-[640px]"
           >
-            {posting ? "Submitting..." : "Submit review"}
-          </button>
-        </form>
+            <h3 className="font-semibold">Write a review</h3>
+            {error && <p className="text-red-600 text-sm">{error}</p>}
+
+            <div className="flex gap-3 items-center">
+              <input
+                className="border px-3 py-2 w-1/2 bg-gray-100"
+                value={form.name}
+                readOnly
+                title="Name pulled from your Cognito profile"
+              />
+              <select
+                className="border px-3 py-2"
+                value={form.rating}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, rating: Number(e.target.value) }))
+                }
+              >
+                {[5, 4, 3, 2, 1].map((v) => (
+                  <option key={v} value={v}>
+                    {v} star{v > 1 ? "s" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <textarea
+              className="border px-3 py-2 min-h-24"
+              placeholder="Share details about quality, fit, etc."
+              value={form.comment}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, comment: e.target.value }))
+              }
+            />
+
+            <button
+              type="submit"
+              disabled={posting}
+              className="self-start bg-black text-white px-5 py-2 text-sm disabled:opacity-60"
+            >
+              {posting ? "Submitting..." : "Submit review"}
+            </button>
+          </form>
+        ) : (
+          <div className="border mt-4 p-4 rounded-md md:w-[640px]">
+            <p className="text-sm text-red-600">
+              Please log in to write a review.
+            </p>
+          </div>
+        )}
 
         {/* Reviews list */}
         <div className="border mt-4 p-4 rounded-md md:w-[640px]">
