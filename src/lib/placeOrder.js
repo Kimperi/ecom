@@ -1,7 +1,7 @@
 // src/lib/placeOrder.js
 import { fetchAuthSession } from "@aws-amplify/auth";
 
-// API Gateway endpoint + route:
+// API Gateway endpoint for orders
 const API_URL = "https://wvqjxgbjxg.execute-api.us-east-1.amazonaws.com/orders";
 
 export async function placeOrder({ address, paymentMethod = "cod", shop }) {
@@ -14,45 +14,57 @@ export async function placeOrder({ address, paymentMethod = "cod", shop }) {
     throw new Error("Shop is not ready. Try again in a moment.");
   }
 
-  // Build items from cart
+  // Build line items from cart using product.id (NOT _id)
   const items = [];
   for (const productId of Object.keys(shop.cartItems)) {
     const sizes = shop.cartItems[productId] || {};
+    const product = shop.products.find(
+      (p) => String(p.id) === String(productId)    // <-- FIXED
+    );
+
     for (const size of Object.keys(sizes)) {
       const qty = Number(sizes[size] || 0);
       if (!qty) continue;
-      const product = shop.products.find((p) => p._id === productId);
+
+      const unitPrice = Number(product?.price || 0); // number or numeric string
       items.push({
         id: productId,
-        name: product?.name || productId,
+        name: product?.name || String(productId),
         size,
         qty,
-        price: Number(product?.price || 0),
+        price: unitPrice, // unit price sent to backend
+        image: Array.isArray(product?.image) ? product.image[0] : product?.image || "",
       });
     }
   }
+
   if (items.length === 0) throw new Error("Your cart is empty.");
 
-  // Totals
+  // Totals (client-side; backend will recompute again)
   const subtotal = items.reduce((s, i) => s + i.qty * i.price, 0);
-  const shipping = 50;
-  const totals = { subtotal, shipping, total: subtotal + shipping, currency: "MAD" };
+  const shipping = Number(shop?.deliveryFee ?? 50);
+  const totals = {
+    subtotal,
+    shipping,
+    total: subtotal + shipping,
+    currency: shop?.currency || "MAD",
+  };
 
   // Minimal user info
   const p = session?.tokens?.idToken?.payload;
   const user = { id: p?.sub, email: p?.email, name: p?.name || p?.email };
 
-  // Call API
+  // Post to API
   const res = await fetch(API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${idToken}`,
+      Authorization: `Bearer ${idToken}`,
     },
     body: JSON.stringify({ user, address, items, totals, paymentMethod }),
   });
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error || `Order failed (${res.status})`);
-  return data; // { ok: true }
+  return data; // { ok: true, ... }
 }
