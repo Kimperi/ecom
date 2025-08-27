@@ -13,10 +13,11 @@ import Orders from "./pages/Orders";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import RequireAuth from "./auth/RequiredAuth";
-
+import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import RequireAdmin from "./routes/RequireAdmin";
 
 const App = () => {
   return (
@@ -25,6 +26,14 @@ const App = () => {
       <Navbar />
 
       <Routes className="px-4 sm: px-[5vw] md: px-[7vw] lg: px-[9vw]">
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <Admin />
+            </RequireAdmin>
+          }
+        />
         <Route path="/" element={<Home />} />
         <Route path="/place-order" element={<PlaceOrder />} />
         <Route

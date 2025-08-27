@@ -1,4 +1,3 @@
-// src/pages/Product.jsx
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
@@ -29,7 +28,6 @@ export default function Product() {
     comment: "",
   });
 
-  // ----- helpers -----
   const renderStars = (value) => {
     const full = Math.floor(value);
     return new Array(5)
@@ -47,8 +45,8 @@ export default function Product() {
   const getUserNameFromCognito = async () => {
     try {
       const session = await fetchAuthSession();
-      const payload = session.tokens?.idToken?.payload || {};
-      return payload.name || payload.given_name || payload.email || "Anonymous";
+      const p = session.tokens?.idToken?.payload || {};
+      return p.name || p.given_name || p.email || "Anonymous";
     } catch {
       return "Anonymous";
     }
@@ -64,16 +62,15 @@ export default function Product() {
     }
   };
 
-  // ----- data loaders -----
-  const fetchProductData = () => {
-    for (const item of products) {
-      if (item._id === productId) {
-        setProductData(item);
-        setImage(item.image?.[0] || "");
-        break;
-      }
+  // ---- data loaders ----
+  useEffect(() => {
+    // find by DynamoDB id (not _id)
+    const found = products.find((p) => String(p.id) === String(productId));
+    if (found) {
+      setProductData(found);
+      setImage(Array.isArray(found.image) ? found.image[0] : found.image);
     }
-  };
+  }, [productId, products]);
 
   const loadReviews = async () => {
     try {
@@ -137,17 +134,11 @@ export default function Product() {
     }
   };
 
-  // ----- derived -----
   const avgRating = useMemo(() => {
     if (!reviews.length) return 0;
     const sum = reviews.reduce((s, r) => s + Number(r.rating || 0), 0);
     return Math.round((sum / reviews.length) * 10) / 10;
   }, [reviews]);
-
-  // ----- effects -----
-  useEffect(() => {
-    fetchProductData();
-  }, [productId, products]);
 
   useEffect(() => {
     if (productId) loadReviews();
@@ -160,21 +151,18 @@ export default function Product() {
     getUserNameFromCognito().then((name) => setForm((f) => ({ ...f, name })));
   }, []);
 
-  // ----- render -----
-  if (!productData) return <div className="opacity-0"></div>;
+  if (!productData) return <div className="opacity-0" />;
 
   return (
     <div className="border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100 mx-10">
-      {/* --- Product Details --- */}
       <div className="flex gap-12 sm:gap-12 flex-col sm:flex-row">
-        {/* Product Images (unchanged) */}
         <div className="flex-1 flex flex-col-reverse gap-3 sm:flex-row">
           <div className="flex sm:flex-col overflow-x-auto sm:overflow-hidden justify-between sm:justify-normal sm:w-[18,7%] h-full">
-            {productData.image.map((item, index) => (
+            {(productData.image || []).map((it, i) => (
               <img
-                onClick={() => setImage(item)}
-                key={index}
-                src={item}
+                onClick={() => setImage(it)}
+                key={i}
+                src={it}
                 alt=""
                 className="w-[24%] md:w-full md:h-[11%] flex-shrink-0 cursor-pointer object-cover mb-3 ml-5"
               />
@@ -185,7 +173,6 @@ export default function Product() {
           </div>
         </div>
 
-        {/* Product Info */}
         <div className="flex-1">
           <h1 className="font-medium text-2xl mt-2">{productData.name}</h1>
 
@@ -207,27 +194,25 @@ export default function Product() {
             {productData.description}
           </p>
 
-          {/* Select Size */}
           <div className="flex flex-col gap-4 my-8">
             <p>Select Size</p>
             <div className="flex gap-2">
-              {productData.sizes.map((item, index) => (
+              {(productData.sizes || []).map((it, i) => (
                 <button
-                  onClick={() => setSize(item)}
-                  key={index}
+                  onClick={() => setSize(it)}
+                  key={i}
                   className={`border py-2 px-4 bg-gray-100 ${
-                    size === item ? "bg-orange-500 " : ""
+                    size === it ? "bg-orange-500 " : ""
                   }`}
                 >
-                  {item}
+                  {it}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Add to Cart */}
           <button
-            onClick={() => addToCart(productData._id, size)}
+            onClick={() => addToCart(productData.id, size)} // ← use DynamoDB id
             className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700"
           >
             ADD TO CART
@@ -235,7 +220,6 @@ export default function Product() {
 
           <hr className="mt-8 sm:w-4/5 border-gray-300" />
 
-          {/* Policies */}
           <div className="text-sm text-gray-500 mt-5 flex flex-col gap-1">
             <p>100% Original product.</p>
             <p>Cash on delivery is available on this product.</p>
@@ -244,9 +228,7 @@ export default function Product() {
         </div>
       </div>
 
-      {/* --- Description + Reviews --- */}
       <div className="md:absolute md:top-210 grid grid-cols-1 md:grid-cols-2 gap-8 mx-5 mt-10 mb-10">
-        {/* Description */}
         <div>
           <h3 className="font-semibold border-b pb-2 mb-3">Description</h3>
           <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
@@ -254,13 +236,11 @@ export default function Product() {
           </div>
         </div>
 
-        {/* Reviews */}
         <div>
           <h3 className="font-semibold border-b pb-2 mb-3">
             Reviews ({reviews.length})
           </h3>
 
-          {/* Review form */}
           {isLoggedIn ? (
             <form
               onSubmit={submitReview}
@@ -315,7 +295,6 @@ export default function Product() {
             </div>
           )}
 
-          {/* Reviews list */}
           <div className="border mt-4 p-4 rounded-md">
             <h4 className="font-semibold mb-2">Customer reviews</h4>
             {loadingReviews ? (

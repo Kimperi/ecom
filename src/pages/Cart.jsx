@@ -4,7 +4,6 @@ import Title from "../components/Title";
 import { assets } from "../assets/assets";
 import { toast } from "react-toastify";
 import CartTotal from "../components/CartTotal";
-import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const {
@@ -13,18 +12,31 @@ const Cart = () => {
     products,
     currency,
     updateQuantity,
-    navigate,
+    navigate, // from context
   } = useContext(ShopContext);
+
   const [cartData, setCartData] = useState([]);
+
+  // --- helpers ---
+  const removeItem = (itemId, size) => {
+    const next = structuredClone(cartItems);
+    if (next[itemId]) {
+      delete next[itemId][size];
+      if (Object.keys(next[itemId]).length === 0) delete next[itemId];
+    }
+    setCartItems(next);
+  };
 
   const handleDeleteItem = (itemId, size, productName) => {
     toast.warn(
       <div>
-        <p>Are you sure you want to remove "{productName}" from your cart?</p>
+        <p>
+          Remove “{productName}” ({size}) from your cart?
+        </p>
         <div className="flex gap-2 mt-2">
           <button
             onClick={() => {
-              updateQuantity(itemId, size, 0);
+              removeItem(itemId, size);
               toast.success("Item removed from cart!");
               toast.dismiss();
             }}
@@ -51,20 +63,26 @@ const Cart = () => {
     );
   };
 
+  const safeThumb = (image) => {
+    const src = Array.isArray(image)
+      ? image[0]
+      : typeof image === "string"
+      ? image
+      : assets.logo; // replace with a nicer placeholder if you have one
+    return src || assets.logo;
+  };
+
+  // build a flat list from cartItems { [id]: { [size]: qty } }
   useEffect(() => {
-    const tempData = [];
-    for (const items in cartItems) {
-      for (const item in cartItems[items]) {
-        if (cartItems[items][item] > 0) {
-          tempData.push({
-            _id: items,
-            size: item,
-            quantity: cartItems[items][item],
-          });
-        }
+    const temp = [];
+    for (const id in cartItems) {
+      const sizes = cartItems[id] || {};
+      for (const size in sizes) {
+        const q = Number(sizes[size]) || 0;
+        if (q > 0) temp.push({ id, size, quantity: q });
       }
     }
-    setCartData(tempData);
+    setCartData(temp);
   }, [cartItems]);
 
   return (
@@ -74,23 +92,30 @@ const Cart = () => {
       </div>
 
       <div>
-        {cartData.map((item, index) => {
+        {cartData.map((item) => {
           const productData = products.find(
-            (product) => product._id === item._id
+            (p) => String(p.id) === String(item.id)
           );
 
+          // If product was deleted or not loaded yet, skip rendering that row
+          if (!productData) return null;
+
+          const thumb = safeThumb(productData.image);
+
           return (
-            <div key={index} className="py-4 mx-25 border-b text-gray-600">
+            <div
+              key={`${item.id}-${item.size}`}
+              className="py-4 mx-25 border-b text-gray-600"
+            >
               {/* Mobile Layout */}
               <div className="block md:hidden">
                 <div className="flex items-start gap-4">
-                  <img className="w-16" src={productData.image[0]} alt="" />
+                  <img className="w-16 h-16 object-cover" src={thumb} alt="" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">{productData.name}</p>
                     <div className="flex items-center gap-3 mt-1 text-sm">
                       <p>
-                        {currency}
-                        {productData.price}
+                        {currency} {Number(productData.price)}
                       </p>
                       <p className="px-2 py-1 border bg-slate-50 text-xs">
                         {item.size}
@@ -99,10 +124,11 @@ const Cart = () => {
                     <div className="flex items-center gap-3 mt-3">
                       <input
                         onChange={(e) => {
-                          if (e.target.value === "") {
-                            updateQuantity(item._id, item.size, 0);
+                          const val = e.target.value;
+                          if (val === "" || Number(val) <= 0) {
+                            removeItem(item.id, item.size);
                           } else {
-                            updateQuantity(item._id, item.size, e.target.value);
+                            updateQuantity(item.id, item.size, val);
                           }
                         }}
                         className="border w-16 px-2 py-1 text-center"
@@ -112,11 +138,7 @@ const Cart = () => {
                       />
                       <img
                         onClick={() =>
-                          handleDeleteItem(
-                            item._id,
-                            item.size,
-                            productData.name
-                          )
+                          handleDeleteItem(item.id, item.size, productData.name)
                         }
                         src={assets.bin_icon}
                         alt="delete"
@@ -130,13 +152,12 @@ const Cart = () => {
               {/* Desktop Layout */}
               <div className="hidden md:grid md:grid-cols-[4fr_2fr_0.5fr] md:items-center md:gap-4">
                 <div className="flex items-start gap-6">
-                  <img className="w-20" src={productData.image[0]} alt="" />
+                  <img className="w-20 h-20 object-cover" src={thumb} alt="" />
                   <div>
                     <p className="text-lg font-medium">{productData.name}</p>
                     <div className="flex items-center gap-5 mt-2">
                       <p>
-                        {currency}
-                        {productData.price}
+                        {currency} {Number(productData.price)}
                       </p>
                       <p className="px-3 py-1 border bg-slate-50">
                         {item.size}
@@ -146,10 +167,11 @@ const Cart = () => {
                 </div>
                 <input
                   onChange={(e) => {
-                    if (e.target.value === "") {
-                      updateQuantity(item._id, item.size, 0);
+                    const val = e.target.value;
+                    if (val === "" || Number(val) <= 0) {
+                      removeItem(item.id, item.size);
                     } else {
-                      updateQuantity(item._id, item.size, e.target.value);
+                      updateQuantity(item.id, item.size, val);
                     }
                   }}
                   className="border max-w-20 px-2 py-1"
@@ -159,7 +181,7 @@ const Cart = () => {
                 />
                 <img
                   onClick={() =>
-                    handleDeleteItem(item._id, item.size, productData.name)
+                    handleDeleteItem(item.id, item.size, productData.name)
                   }
                   src={assets.bin_icon}
                   alt="delete"
@@ -171,16 +193,16 @@ const Cart = () => {
         })}
       </div>
 
-      {/* Show empty cart message when cart is empty */}
+      {/* Empty cart message */}
       {cartData.length === 0 && (
         <div className="text-center my-20">
           <p className="text-gray-500 text-lg">Your cart is empty</p>
         </div>
       )}
 
-      {/* Only show CartTotal and Checkout when cart has items */}
+      {/* Totals + checkout */}
       {cartData.length > 0 && (
-        <div className="flex justify-end my-20 mx-25">
+        <div className="flex justify-end my-20 mx-25 w-full max-w-5xl">
           <div className="w-full sm:w-[450px]">
             <CartTotal />
             <div className="w-full text-end mt-8">

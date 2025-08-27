@@ -1,55 +1,51 @@
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 import { ShopContext } from "../context/ShopContext";
-import Title from "./Title";
 
 const CartTotal = () => {
-  const { cartItems, products, currency, deliveryFee } =
+  const { cartItems, products, deliveryFee, currency } =
     useContext(ShopContext);
 
-  const getCartAmount = () => {
-    let totalAmount = 0;
-    for (const items in cartItems) {
-      let itemInfo = products.find((product) => product._id === items);
-      for (const item in cartItems[items]) {
-        try {
-          if (cartItems[items][item] > 0) {
-            totalAmount += itemInfo.price * cartItems[items][item];
-          }
-        } catch (error) {}
+  const { subtotal, itemsCount } = useMemo(() => {
+    let subtotalAcc = 0;
+    let count = 0;
+
+    // cartItems shape: { [id]: { [size]: qty } }
+    for (const id in cartItems) {
+      const sizes = cartItems[id] || {};
+      const product = products.find((p) => String(p.id) === String(id));
+      if (!product) continue; // product may have been deleted
+
+      const price = Number(product.price) || 0;
+
+      for (const size in sizes) {
+        const qty = Number(sizes[size]) || 0;
+        if (qty <= 0) continue;
+        count += qty;
+        subtotalAcc += price * qty;
       }
     }
-    return totalAmount;
-  };
+    return { subtotal: subtotalAcc, itemsCount: count };
+  }, [cartItems, products]);
+
+  const shipping = itemsCount > 0 ? Number(deliveryFee || 0) : 0;
+  const total = subtotal + shipping;
+
+  const fmt = (n) => `${currency} ${Number(n || 0).toFixed(2)}`; // e.g. "MAD 200.00"
 
   return (
-    <div className="w-full">
-      <div className="text-2xl">
-        <Title text1={"CART"} text2={"TOTALS"} />
+    <div className="w-full border p-5">
+      <h3 className="text-xl font-semibold mb-4">Cart Totals</h3>
+      <div className="flex items-center justify-between py-2 border-b">
+        <p>Subtotal</p>
+        <p>{fmt(subtotal)}</p>
       </div>
-      <div className="flex flex-col gap-2 mt-2 text-sm">
-        <div className="flex justify-between">
-          <p>Subtotal</p>
-          <p>
-            {currency}
-            {getCartAmount()}.00
-          </p>
-        </div>
-        <hr />
-        <div className="flex justify-between">
-          <p>Shipping Fee</p>
-          <p>
-            {currency}
-            {deliveryFee}
-          </p>
-        </div>
-        <hr />
-        <div className="flex justify-between">
-          <b>Total</b>
-          <b>
-            {currency}
-            {getCartAmount() === 0 ? 0 : getCartAmount() + deliveryFee}
-          </b>
-        </div>
+      <div className="flex items-center justify-between py-2 border-b">
+        <p>Shipping Fee</p>
+        <p>{fmt(shipping)}</p>
+      </div>
+      <div className="flex items-center justify-between py-3 font-semibold">
+        <p>Total</p>
+        <p>{fmt(total)}</p>
       </div>
     </div>
   );

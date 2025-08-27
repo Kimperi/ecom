@@ -14,20 +14,28 @@ const Navbar = () => {
   const { setShowsearch, showsearch, getCartCount } = useContext(ShopContext);
 
   const [userName, setUserName] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false); // ⬅️ NEW
+  const [authLoading, setAuthLoading] = useState(true); // (optional: avoid flicker)
   const navigate = useNavigate();
 
   async function loadUser() {
     try {
       const s = await fetchAuthSession();
       const id = s?.tokens?.idToken;
+
       if (!id) {
         setUserName("");
+        setIsAdmin(false);
         return;
       }
-      // try ID token first, then attributes
+
       const p = id.payload || {};
       let name =
         p.name || p.given_name || p.email || p["cognito:username"] || "";
+
+      // detect admin group
+      const groups = p["cognito:groups"] || [];
+      setIsAdmin(Array.isArray(groups) && groups.includes("admin"));
 
       if (!name) {
         const attrs = await fetchUserAttributes().catch(() => ({}));
@@ -36,6 +44,9 @@ const Navbar = () => {
       setUserName(name || "");
     } catch {
       setUserName("");
+      setIsAdmin(false);
+    } finally {
+      setAuthLoading(false);
     }
   }
 
@@ -48,6 +59,7 @@ const Navbar = () => {
   async function handleLogout() {
     await signOut();
     setUserName("");
+    setIsAdmin(false);
     navigate("/", { replace: true });
   }
 
@@ -96,6 +108,19 @@ const Navbar = () => {
             <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
           </NavLink>
         </li>
+
+        {/* ⬇️ ADMIN (desktop) - only when user is in 'admin' group */}
+        {!authLoading && isAdmin && (
+          <li>
+            <NavLink
+              to="/admin"
+              className="flex flex-col items-center gap-1 hover:text-black transition-colors duration-300"
+            >
+              <p>ADMIN</p>
+              <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
+            </NavLink>
+          </li>
+        )}
       </ul>
 
       <div className="flex items-center gap-5 flex-1 justify-end">
@@ -188,6 +213,17 @@ const Navbar = () => {
             >
               CONTACT
             </NavLink>
+
+            {/* ⬇️ ADMIN (mobile) */}
+            {!authLoading && isAdmin && (
+              <NavLink
+                className="py-2 pl-6 border-gray-300 border-b"
+                to="/admin"
+                onClick={() => setVisible(false)}
+              >
+                ADMIN
+              </NavLink>
+            )}
 
             {userName ? (
               <div className="py-2 pl-6 flex items-center gap-3">
