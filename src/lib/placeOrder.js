@@ -14,7 +14,7 @@ export async function placeOrder({ address, paymentMethod = "cod", shop }) {
     throw new Error("Shop is not ready. Try again in a moment.");
   }
 
-  // Build line items from cart using product.id (NOT _id)
+
   const items = [];
   for (const productId of Object.keys(shop.cartItems)) {
     const sizes = shop.cartItems[productId] || {};
