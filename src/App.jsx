@@ -1,6 +1,5 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import "tailwindcss";
 
 import Home from "./pages/Home";
 import PlaceOrder from "./pages/PlaceOrder";
@@ -25,7 +24,7 @@ const App = () => {
       <ToastContainer />
       <Navbar />
 
-      <Routes className="px-4 sm: px-[5vw] md: px-[7vw] lg: px-[9vw]">
+      <Routes>
         <Route
           path="/admin"
           element={

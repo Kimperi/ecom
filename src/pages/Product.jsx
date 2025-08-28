@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
 import { assets } from "../assets/assets";
 import RelatedProduct from "../components/RelatedProduct";
@@ -28,6 +28,7 @@ export default function Product() {
     comment: "",
   });
 
+  // ---------- helpers ----------
   const renderStars = (value) => {
     const full = Math.floor(value);
     return new Array(5)
@@ -36,8 +37,8 @@ export default function Product() {
         <img
           key={i}
           src={i < full ? assets.star_icon : assets.star_dull_icon}
-          alt=""
-          className="w-3.5"
+          alt={i < full ? "Filled star" : "Empty star"}
+          className="w-4 h-4"
         />
       ));
   };
@@ -62,13 +63,15 @@ export default function Product() {
     }
   };
 
-  // ---- data loaders ----
+  // ---------- data loaders ----------
   useEffect(() => {
-    // find by DynamoDB id (not _id)
-    const found = products.find((p) => String(p.id) === String(productId));
+    const found = products.find((p) => String(p.id) === String(productId)); // DynamoDB id
     if (found) {
       setProductData(found);
-      setImage(Array.isArray(found.image) ? found.image[0] : found.image);
+      const first = Array.isArray(found.image) ? found.image[0] : found.image;
+      setImage(first);
+      // scroll to top when product changes
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [productId, products]);
 
@@ -151,112 +154,195 @@ export default function Product() {
     getUserNameFromCognito().then((name) => setForm((f) => ({ ...f, name })));
   }, []);
 
-  if (!productData) return <div className="opacity-0" />;
-
-  return (
-    <div className="border-t-2 pt-10 transition-opacity ease-in duration-500 opacity-100 mx-10">
-      <div className="flex gap-12 sm:gap-12 flex-col sm:flex-row">
-        <div className="flex-1 flex flex-col-reverse gap-3 sm:flex-row">
-          <div className="flex sm:flex-col overflow-x-auto sm:overflow-hidden justify-between sm:justify-normal sm:w-[18,7%] h-full">
-            {(productData.image || []).map((it, i) => (
-              <img
-                onClick={() => setImage(it)}
-                key={i}
-                src={it}
-                alt=""
-                className="w-[24%] md:w-full md:h-[11%] flex-shrink-0 cursor-pointer object-cover mb-3 ml-5"
-              />
-            ))}
-          </div>
-          <div className="w-full sm:w-[80%] h-[44%]">
-            <img src={image} alt="" className="w-full h-full object-cover" />
+  // ---------- UI ----------
+  if (!productData)
+    return (
+      <div className="mx-4 md:mx-10 animate-pulse">
+        <div className="h-6 w-40 bg-gray-200 rounded mb-4" />
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="h-80 md:h-[520px] bg-gray-200 rounded-xl" />
+          <div className="space-y-4">
+            <div className="h-8 w-3/4 bg-gray-200 rounded" />
+            <div className="h-6 w-1/3 bg-gray-200 rounded" />
+            <div className="h-24 bg-gray-200 rounded" />
+            <div className="h-12 w-40 bg-gray-200 rounded" />
           </div>
         </div>
+      </div>
+    );
 
-        <div className="flex-1">
-          <h1 className="font-medium text-2xl mt-2">{productData.name}</h1>
+  const hasSizes =
+    Array.isArray(productData.sizes) && productData.sizes.length > 0;
+  const disabledAdd = hasSizes && !size;
 
-          <div className="flex items-center gap-1 mt-2">
-            {renderStars(avgRating)}
-            <p className="pl-2 text-sm">
-              {avgRating
-                ? `${avgRating} · ${reviews.length} review${
-                    reviews.length !== 1 ? "s" : ""
-                  }`
-                : "No reviews yet"}
-            </p>
+  return (
+    <div className="mx-4 md:mx-10">
+      {/* Breadcrumbs */}
+      <nav aria-label="Breadcrumb" className="text-sm text-gray-500 py-3">
+        <ol className="flex gap-2 flex-wrap">
+          <li>
+            <Link to="/" className="hover:text-gray-800">
+              Home
+            </Link>
+          </li>
+          <li>/</li>
+          <li className="text-gray-800 line-clamp-1" aria-current="page">
+            {productData.name}
+          </li>
+        </ol>
+      </nav>
+
+      {/* Product layout grid */}
+      <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+        {/* Left — gallery */}
+        <section className="lg:order-1">
+          <div className="rounded-2xl overflow-hidden bg-gray-50 border">
+            <img
+              src={image}
+              alt={productData.name}
+              className="w-full h-[360px] md:h-[540px] object-cover"
+            />
           </div>
 
-          <p className="mt-5 text-3xl font-medium">
-            {productData.price} {currency}
-          </p>
-          <p className="mt-5 text-gray-500 md:w-4/5">
-            {productData.description}
-          </p>
-
-          <div className="flex flex-col gap-4 my-8">
-            <p>Select Size</p>
-            <div className="flex gap-2">
-              {(productData.sizes || []).map((it, i) => (
+          <div className="mt-3">
+            <div className="hidden sm:grid grid-cols-5 gap-3">
+              {(productData.image || []).map((src, i) => (
                 <button
-                  onClick={() => setSize(it)}
                   key={i}
-                  className={`border py-2 px-4 bg-gray-100 ${
-                    size === it ? "bg-orange-500 " : ""
+                  onClick={() => setImage(src)}
+                  className={`rounded-xl overflow-hidden border focus:outline-none focus:ring-2 focus:ring-black ${
+                    image === src ? "ring-2 ring-black" : ""
                   }`}
                 >
-                  {it}
+                  <img
+                    src={src}
+                    alt="Thumbnail"
+                    className="w-full h-24 object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+            <div className="sm:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1">
+              {(productData.image || []).map((src, i) => (
+                <button
+                  key={i}
+                  onClick={() => setImage(src)}
+                  className={`snap-start min-w-[28%] rounded-xl overflow-hidden border ${
+                    image === src ? "ring-2 ring-black" : ""
+                  }`}
+                >
+                  <img
+                    src={src}
+                    alt="Thumbnail"
+                    className="w-full h-24 object-cover"
+                  />
                 </button>
               ))}
             </div>
           </div>
+        </section>
 
-          <button
-            onClick={() => addToCart(productData.id, size)} // ← use DynamoDB id
-            className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700"
-          >
-            ADD TO CART
-          </button>
+        {/* Right — details */}
+        <aside className="lg:order-2 lg:sticky lg:top-24 self-start space-y-5">
+          <h1 className="font-semibold text-2xl md:text-3xl tracking-tight text-gray-900">
+            {productData.name}
+          </h1>
 
-          <hr className="mt-8 sm:w-4/5 border-gray-300" />
-
-          <div className="text-sm text-gray-500 mt-5 flex flex-col gap-1">
-            <p>100% Original product.</p>
-            <p>Cash on delivery is available on this product.</p>
-            <p>Easy return and exchange policy within 7 days.</p>
+          <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-1">
+              {renderStars(avgRating)}
+            </div>
+            <span className="text-gray-600">
+              {avgRating
+                ? `${avgRating} • ${reviews.length} review${
+                    reviews.length !== 1 ? "s" : ""
+                  }`
+                : "No reviews yet"}
+            </span>
           </div>
-        </div>
+
+          <div className="flex items-baseline gap-3">
+            <p className="text-3xl font-semibold text-gray-900">
+              {productData.price} {currency}
+            </p>
+            {productData.compareAtPrice && (
+              <p className="text-gray-400 line-through">
+                {productData.compareAtPrice} {currency}
+              </p>
+            )}
+          </div>
+
+          {productData.description && (
+            <p className="text-gray-600 leading-relaxed">
+              {productData.description}
+            </p>
+          )}
+
+          {hasSizes && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Select size</label>
+              <div className="flex flex-wrap gap-2">
+                {productData.sizes.map((it, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSize(it)}
+                    className={`px-4 py-2 rounded-xl border text-sm transition ${
+                      size === it
+                        ? "bg-gray-900 text-white border-gray-900"
+                        : "bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    {it}
+                  </button>
+                ))}
+              </div>
+              {disabledAdd && (
+                <p className="text-xs text-red-600">Please choose a size.</p>
+              )}
+            </div>
+          )}
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => addToCart(productData.id, size)}
+              disabled={disabledAdd}
+              className="w-full sm:w-auto inline-flex justify-center items-center gap-2 bg-black text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-gray-800 disabled:opacity-60"
+            >
+              <span>Add to cart</span>
+            </button>
+          </div>
+        </aside>
       </div>
 
-      <div className="md:absolute md:top-210 grid grid-cols-1 md:grid-cols-2 gap-8 mx-5 mt-10 mb-10">
-        <div>
-          <h3 className="font-semibold border-b pb-2 mb-3">Description</h3>
-          <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
-            <p>{productData.description}</p>
+      {/* Reviews */}
+      <div className="grid lg:grid-cols-5 gap-8 mt-12">
+        <section className="lg:col-span-3">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-lg">
+              Reviews ({reviews.length})
+            </h3>
+            {avgRating > 0 && (
+              <span className="text-sm text-gray-600">
+                Average: {avgRating}/5
+              </span>
+            )}
           </div>
-        </div>
-
-        <div>
-          <h3 className="font-semibold border-b pb-2 mb-3">
-            Reviews ({reviews.length})
-          </h3>
 
           {isLoggedIn ? (
             <form
               onSubmit={submitReview}
-              className="border p-4 rounded-md flex flex-col gap-3"
+              className="border rounded-2xl p-4 space-y-3"
             >
-              <h4 className="font-semibold">Write a review</h4>
+              <h4 className="font-medium">Write a review</h4>
               {error && <p className="text-red-600 text-sm">{error}</p>}
-
-              <div className="flex gap-3 items-center">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <input
-                  className="border px-3 py-2 w-1/2 bg-gray-100"
+                  className="border px-3 py-2 rounded-xl bg-gray-50 flex-1"
                   value={form.name}
                   readOnly
                 />
                 <select
-                  className="border px-3 py-2"
+                  className="border px-3 py-2 rounded-xl w-36"
                   value={form.rating}
                   onChange={(e) =>
                     setForm((f) => ({ ...f, rating: Number(e.target.value) }))
@@ -269,34 +355,32 @@ export default function Product() {
                   ))}
                 </select>
               </div>
-
               <textarea
-                className="border px-3 py-2 min-h-24"
+                className="border px-3 py-2 rounded-xl min-h-24 w-full"
                 placeholder="Share details about quality, fit, etc."
                 value={form.comment}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, comment: e.target.value }))
                 }
               />
-
               <button
                 type="submit"
                 disabled={posting}
-                className="self-start bg-black text-white px-5 py-2 text-sm disabled:opacity-60"
+                className="inline-flex bg-black text-white px-5 py-2 rounded-xl text-sm disabled:opacity-60"
               >
                 {posting ? "Submitting..." : "Submit review"}
               </button>
             </form>
           ) : (
-            <div className="border p-4 rounded-md">
-              <p className="text-sm text-red-600">
+            <div className="border rounded-2xl p-4 bg-amber-50 border-amber-200">
+              <p className="text-sm text-amber-900">
                 Please log in to write a review.
               </p>
             </div>
           )}
 
-          <div className="border mt-4 p-4 rounded-md">
-            <h4 className="font-semibold mb-2">Customer reviews</h4>
+          <div className="border rounded-2xl p-4 mt-4">
+            <h4 className="font-medium mb-2">Customer reviews</h4>
             {loadingReviews ? (
               <p className="text-sm text-gray-500">Loading…</p>
             ) : reviews.length === 0 ? (
@@ -304,9 +388,9 @@ export default function Product() {
                 No reviews yet. Be the first!
               </p>
             ) : (
-              <ul className="flex flex-col gap-4">
+              <ul className="flex flex-col divide-y">
                 {reviews.map((r) => (
-                  <li key={r.reviewId} className="border-b pb-3">
+                  <li key={r.reviewId} className="py-3">
                     <div className="flex items-center gap-2">
                       <div className="flex">{renderStars(r.rating)}</div>
                       <span className="text-sm text-gray-600">
@@ -320,13 +404,15 @@ export default function Product() {
               </ul>
             )}
           </div>
-        </div>
+        </section>
       </div>
 
-      <RelatedProduct
-        category={productData.category}
-        subCategory={productData.subCategory}
-      />
+      <div className="mt-14">
+        <RelatedProduct
+          category={productData.category}
+          subCategory={productData.subCategory}
+        />
+      </div>
     </div>
   );
 }
