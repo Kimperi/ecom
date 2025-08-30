@@ -190,16 +190,16 @@ export default function Admin() {
                   Price
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                    MAD
-                  </span>
                   <input
-                    className="w-full border border-gray-300 rounded-lg pl-8 pr-4 py-3 focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
+                    className="w-full border border-gray-300 rounded-lg px-4 pr-16 py-3 focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
                     type="number"
                     placeholder="0.00"
                     value={form.price}
                     onChange={(e) => onChange("price", e.target.value)}
                   />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                    MAD
+                  </span>
                 </div>
               </div>
               <div className="space-y-2">
@@ -459,7 +459,7 @@ export default function Admin() {
                                     clipRule="evenodd"
                                   />
                                 </svg>
-                                ${p.price}
+                                {p.price} MAD
                               </span>
                               <span className="flex items-center gap-1">
                                 <svg
