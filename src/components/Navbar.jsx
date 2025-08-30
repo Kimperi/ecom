@@ -11,11 +11,11 @@ import { Hub } from "aws-amplify/utils";
 
 const Navbar = () => {
   const [Visible, setVisible] = useState(false);
-  const { setShowsearch, showsearch, getCartCount } = useContext(ShopContext);
+  const { getCartCount } = useContext(ShopContext);
 
   const [userName, setUserName] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false); // ⬅️ NEW
-  const [authLoading, setAuthLoading] = useState(true); // (optional: avoid flicker)
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
   const navigate = useNavigate();
 
   async function loadUser() {
@@ -33,7 +33,6 @@ const Navbar = () => {
       let name =
         p.name || p.given_name || p.email || p["cognito:username"] || "";
 
-      // detect admin group
       const groups = p["cognito:groups"] || [];
       setIsAdmin(Array.isArray(groups) && groups.includes("admin"));
 
@@ -51,8 +50,8 @@ const Navbar = () => {
   }
 
   useEffect(() => {
-    loadUser(); // on mount
-    const un = Hub.listen("auth", () => loadUser()); // on signIn/signOut
+    loadUser();
+    const un = Hub.listen("auth", () => loadUser());
     return () => un();
   }, []);
 
@@ -61,6 +60,7 @@ const Navbar = () => {
     setUserName("");
     setIsAdmin(false);
     navigate("/", { replace: true });
+    setVisible(false);
   }
 
   return (
@@ -109,7 +109,6 @@ const Navbar = () => {
           </NavLink>
         </li>
 
-        {/* ⬇️ ADMIN (desktop) - only when user is in 'admin' group */}
         {!authLoading && isAdmin && (
           <li>
             <NavLink
@@ -165,59 +164,77 @@ const Navbar = () => {
         />
       </div>
 
-      {/* Mobile menu */}
+      {/* ==== Mobile menu (fixed, overlay + drawer) ==== */}
+      {/* Overlay */}
       <div
-        className={`absolute top-0 left-0 right-0 bottom-0 overflow-hidden bg-white transition-all ${
-          Visible ? "w-full" : "w-0"
+        className={`fixed inset-0 z-[1100] bg-black/40 transition-opacity duration-300 ${
+          Visible
+            ? "opacity-100 pointer-events-auto"
+            : "opacity-0 pointer-events-none"
         }`}
-      >
-        <div className="flex flex-col text-gray-600">
-          <div className="flex flex-col gap-4 p-3">
-            <div
-              onClick={() => setVisible(false)}
-              className="flex items-center gap-2 cursor-pointer hover:text-black transition-colors duration-300 border border-gray-300 rounded-lg px-4 py-3 self-start hover:bg-gray-50"
-            >
-              <img
-                src={assets.dropdown_icon}
-                className="h-4 -rotate-180"
-                alt="back arrow"
-              />
-              <p className="font-medium text-gray-700">Back</p>
-            </div>
+        onClick={() => setVisible(false)}
+        aria-hidden="true"
+      />
 
+      {/* Drawer */}
+      <nav
+        className={`fixed top-0 right-0 h-screen w-72 max-w-[85vw] z-[1200] bg-white shadow-2xl transition-transform duration-300 ${
+          Visible ? "translate-x-0" : "translate-x-full"
+        }`}
+        role="dialog"
+        aria-label="Mobile navigation"
+      >
+        <div className="flex flex-col text-gray-600 h-full">
+          <div className="flex items-center justify-between p-4 border-b">
+            <span className="font-semibold">Menu</span>
+            <button
+              onClick={() => setVisible(false)}
+              className="p-2 -m-2"
+              aria-label="Close menu"
+            >
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M6 6l12 12M18 6L6 18"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex-1 flex flex-col gap-1 p-3">
             <NavLink
-              className="py-2 pl-6 border-b border-gray-300"
+              className="py-2 pl-6 border-b border-gray-200"
               to="/"
               onClick={() => setVisible(false)}
             >
               HOME
             </NavLink>
             <NavLink
-              className="py-2 pl-6 border-gray-300 border-b"
+              className="py-2 pl-6 border-b border-gray-200"
               to="/collection"
               onClick={() => setVisible(false)}
             >
               COLLECTION
             </NavLink>
             <NavLink
-              className="py-2 pl-6 border-gray-300 border-b"
+              className="py-2 pl-6 border-b border-gray-200"
               to="/about"
               onClick={() => setVisible(false)}
             >
               ABOUT
             </NavLink>
             <NavLink
-              className="py-2 pl-6 border-gray-300 border-b"
+              className="py-2 pl-6 border-b border-gray-200"
               to="/contact"
               onClick={() => setVisible(false)}
             >
               CONTACT
             </NavLink>
 
-            {/* ⬇️ ADMIN (mobile) */}
             {!authLoading && isAdmin && (
               <NavLink
-                className="py-2 pl-6 border-gray-300 border-b"
+                className="py-2 pl-6 border-b border-gray-200"
                 to="/admin"
                 onClick={() => setVisible(false)}
               >
@@ -247,8 +264,12 @@ const Navbar = () => {
               </NavLink>
             )}
           </div>
+
+          <div className="p-4 text-xs text-gray-400 border-t">
+            © {new Date().getFullYear()} KIMPERI
+          </div>
         </div>
-      </div>
+      </nav>
     </div>
   );
 };
