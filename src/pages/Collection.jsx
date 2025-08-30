@@ -80,59 +80,84 @@ const Collection = () => {
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
       {/* Left filters */}
       <div className="min-w-60 md:ml-4 ml-2">
-        <p
-          className="text-xl flex items-center cursor-pointer gap-2 my-5 ml-6"
-          onClick={() => setShowFilter(!showFilter)}
-        >
-          FILTERS
-          <img
-            className={`h-3 sm:hidden ${showFilter ? "rotate-180" : ""}`}
-            src={assets.dropdown_icon}
-            alt=""
-          />
-        </p>
-
-        <div
-          className={`border border-gray-300 pl-5 py-3 mt-6 mx-auto max-w-xs ${
-            showFilter ? "" : "hidden"
-          } md:block`}
-        >
-          <p className="mb-3 text-sm font-medium">CATEGORIES</p>
-          <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            {["Men", "Women", "Kids"].map((c) => (
-              <label className="flex gap-2" key={c}>
-                <input
-                  className="w-3"
-                  type="checkbox"
-                  value={c}
-                  onChange={Toggle}
-                  checked={selectedCategories.includes(c)}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {/* Filter Header */}
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+            <button
+              className="md:hidden ml-auto p-1 hover:bg-gray-100 rounded transition-colors"
+              onClick={() => setShowFilter(!showFilter)}
+            >
+              <svg
+                className={`w-5 h-5 text-gray-500 transition-transform ${
+                  showFilter ? "rotate-180" : ""
+                }`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
                 />
-                {c}
-              </label>
-            ))}
+              </svg>
+            </button>
           </div>
-        </div>
 
-        <div
-          className={`border border-gray-300 pl-5 py-3 mt-6 mx-auto max-w-xs ${
-            showFilter ? "" : "hidden"
-          } md:block`}
-        >
-          <p className="mb-3 text-sm font-medium">TYPES</p>
-          <div className="flex flex-col gap-2 text-sm font-light text-gray-700">
-            {["Topwear", "Bottomwear", "Winterwear"].map((s) => (
-              <label className="flex gap-2" key={s}>
-                <input
-                  className="w-3"
-                  type="checkbox"
-                  value={s}
-                  onChange={ToggleSubCategory}
-                  checked={selectedSubCategories.includes(s)}
-                />
-                {s}
-              </label>
-            ))}
+          {/* Filter Content */}
+          <div className={`${showFilter ? "" : "hidden"} md:block space-y-6`}>
+            {/* Categories */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                Categories
+              </h3>
+              <div className="space-y-2">
+                {["Men", "Women", "Kids"].map((c) => (
+                  <label
+                    key={c}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      value={c}
+                      onChange={Toggle}
+                      checked={selectedCategories.includes(c)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">{c}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Types */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Types</h3>
+              <div className="space-y-2">
+                {["Topwear", "Bottomwear", "Winterwear"].map((s) => (
+                  <label
+                    key={s}
+                    className="flex items-center gap-3 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      value={s}
+                      onChange={ToggleSubCategory}
+                      checked={selectedSubCategories.includes(s)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">{s}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Results Count */}
+            <div className="pt-4 border-t border-gray-100">
+              <p className="text-xs text-gray-500">
+                Showing {filterProducts.length} products
+              </p>
+            </div>
           </div>
         </div>
       </div>
