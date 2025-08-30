@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
-import { assets } from "../assets/assets";
+
 import RelatedProduct from "../components/RelatedProduct";
 import { fetchAuthSession } from "@aws-amplify/auth";
 

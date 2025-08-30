@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { assets } from "../assets/assets";
 
 export default function ProductItem({ id, name, price, image }) {
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+
   const thumb = Array.isArray(image)
     ? image[0]
     : typeof image === "string" && image.length > 0
@@ -11,6 +14,15 @@ export default function ProductItem({ id, name, price, image }) {
 
   const displayPrice = Number(price);
 
+  const handleImageLoad = () => {
+    setImageLoading(false);
+  };
+
+  const handleImageError = () => {
+    setImageLoading(false);
+    setImageError(true);
+  };
+
   return (
     <Link
       to={`/product/${encodeURIComponent(id)}`}
@@ -18,15 +30,33 @@ export default function ProductItem({ id, name, price, image }) {
     >
       {/* Image Container */}
       <div className="relative aspect-[4/5] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
+        {/* Loading Spinner */}
+        {imageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-100 z-10">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-800"></div>
+          </div>
+        )}
+
+        {/* Product Image */}
         <img
           src={thumb}
           alt={name}
-          className="h-full w-full object-cover transition-all duration-700 group-hover:scale-110"
+          className={`h-full w-full object-cover transition-all duration-700 group-hover:scale-110 ${
+            imageLoading ? "opacity-0" : "opacity-100"
+          }`}
           loading="lazy"
-          onError={(e) => {
-            e.currentTarget.src = assets.logo;
-          }}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
         />
+
+        {/* Fallback Image on Error */}
+        {imageError && (
+          <img
+            src={assets.logo}
+            alt={name}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
 
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
