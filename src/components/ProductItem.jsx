@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { assets } from "../assets/assets"; // use any placeholder you have
+import { assets } from "../assets/assets";
+
 export default function ProductItem({ id, name, price, image }) {
   const thumb = Array.isArray(image)
     ? image[0]
@@ -13,26 +14,55 @@ export default function ProductItem({ id, name, price, image }) {
   return (
     <Link
       to={`/product/${encodeURIComponent(id)}`}
-      className="block group rounded border overflow-hidden"
+      className="group block bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100 hover:border-blue-200"
     >
-      <div className="aspect-[4/5] bg-gray-50">
+      {/* Image Container */}
+      <div className="relative aspect-[4/5] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
         <img
           src={thumb}
           alt={name}
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          className="h-full w-full object-cover transition-all duration-700 group-hover:scale-110"
           loading="lazy"
           onError={(e) => {
             e.currentTarget.src = assets.logo;
           }}
         />
+
+        {/* Hover Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500" />
+
+        {/* Quick View Badge */}
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
+          <div className="bg-white/90 backdrop-blur-sm text-gray-800 text-xs font-semibold px-3 py-1.5 rounded-full shadow-lg border border-gray-200">
+            Quick View
+          </div>
+        </div>
+
+        {/* Sale Badge (Optional - you can remove this if not needed) */}
+        <div className="absolute top-3 left-3">
+          <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
+            SALE
+          </div>
+        </div>
       </div>
 
-      <div className="p-3">
-        <h3 className="text-sm md:text-base font-medium line-clamp-2">
+      {/* Content Container */}
+      <div className="p-5">
+        {/* Product Name */}
+        <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-3 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
           {name}
         </h3>
-        <div className="mt-1 text-sm md:text-base font-semibold">
-          {Number.isFinite(displayPrice) ? `${displayPrice} MAD` : price}
+
+        {/* Price */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="text-lg font-bold text-gray-900">
+            {Number.isFinite(displayPrice) ? `${displayPrice} MAD` : price}
+          </div>
+
+          {/* Add to Cart Button */}
+          <button className="opacity-0 group-hover:opacity-100 transition-all duration-500 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-full transform translate-y-3 group-hover:translate-y-0 shadow-lg hover:shadow-xl">
+            Add to Cart
+          </button>
         </div>
       </div>
     </Link>

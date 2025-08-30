@@ -19,7 +19,7 @@ export async function placeOrder({ address, paymentMethod = "cod", shop }) {
   for (const productId of Object.keys(shop.cartItems)) {
     const sizes = shop.cartItems[productId] || {};
     const product = shop.products.find(
-      (p) => String(p.id) === String(productId)    // <-- FIXED
+      (p) => String(p.id) === String(productId)    
     );
 
     for (const size of Object.keys(sizes)) {

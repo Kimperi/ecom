@@ -3,9 +3,10 @@ import { ShopContext } from "../context/ShopContext";
 import { assets } from "../assets/assets";
 import Title from "../components/Title";
 import ProductItem from "../components/ProductItem";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 const Collection = () => {
-  const { products } = useContext(ShopContext);
+  const { products, loadingProducts } = useContext(ShopContext);
 
   const [showFilter, setShowFilter] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState([
@@ -52,6 +53,28 @@ const Collection = () => {
     // "relevant" keeps original order (from API)
     return arr;
   }, [products, selectedCategories, selectedSubCategories, sortBy]);
+
+  if (loadingProducts) {
+    return (
+      <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
+        {/* Left filters */}
+        <div className="min-w-60 md:ml-4 ml-2">
+          <p className="text-xl flex items-center cursor-pointer gap-2 my-5 ml-6">
+            FILTERS
+            <img className="h-3 sm:hidden" src={assets.dropdown_icon} alt="" />
+          </p>
+        </div>
+
+        {/* Right side with loading */}
+        <div className="flex-1">
+          <div className="flex justify-center text-base sm:text-2xl mb-4 mt-7">
+            <Title text1={"ALL"} text2={"COLLECTIONS"} />
+          </div>
+          <LoadingSpinner text="Loading products..." />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t">
@@ -134,7 +157,7 @@ const Collection = () => {
         </div>
 
         {/* Products */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6 mx-5 md:mx-7 my-5 md:my-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 gap-y-8 mx-5 md:mx-7 my-5 md:my-10">
           {filterProducts.map((item) => (
             <ProductItem
               key={item.id}

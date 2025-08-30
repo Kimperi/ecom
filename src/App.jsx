@@ -1,5 +1,8 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Routes, Route } from "react-router-dom";
+import { useScrollToTop } from "./hooks/useScrollToTop";
+import { ShopContext } from "./context/ShopContext";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 import Home from "./pages/Home";
 import PlaceOrder from "./pages/PlaceOrder";
@@ -19,6 +22,20 @@ import "react-toastify/dist/ReactToastify.css";
 import RequireAdmin from "./routes/RequireAdmin";
 
 const App = () => {
+  // This will automatically scroll to top on every route change
+  useScrollToTop();
+
+  const { loadingProducts } = useContext(ShopContext);
+
+  // Show global loading state when products are initially loading
+  if (loadingProducts) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner size="xl" text="Loading your shopping experience..." />
+      </div>
+    );
+  }
+
   return (
     <div>
       <ToastContainer />
