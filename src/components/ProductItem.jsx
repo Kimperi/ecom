@@ -14,7 +14,7 @@ export default function ProductItem({ id, name, price, image }) {
   return (
     <Link
       to={`/product/${encodeURIComponent(id)}`}
-      className="group block bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100 hover:border-blue-200"
+      className="group block bg-white rounded-2xl shadow-sm hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-800 hover:border-gray-900"
     >
       {/* Image Container */}
       <div className="relative aspect-[4/5] bg-gradient-to-br from-gray-50 to-gray-100 overflow-hidden">
@@ -37,19 +37,12 @@ export default function ProductItem({ id, name, price, image }) {
             Quick View
           </div>
         </div>
-
-        {/* Sale Badge (Optional - you can remove this if not needed) */}
-        <div className="absolute top-3 left-3">
-          <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
-            SALE
-          </div>
-        </div>
       </div>
 
       {/* Content Container */}
       <div className="p-5">
         {/* Product Name */}
-        <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-3 group-hover:text-blue-600 transition-colors duration-300 leading-tight">
+        <h3 className="text-sm font-semibold text-gray-800 line-clamp-2 mb-3 group-hover:text-gray-900 transition-colors duration-300 leading-tight">
           {name}
         </h3>
 
@@ -60,7 +53,7 @@ export default function ProductItem({ id, name, price, image }) {
           </div>
 
           {/* Add to Cart Button */}
-          <button className="opacity-0 group-hover:opacity-100 transition-all duration-500 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-full transform translate-y-3 group-hover:translate-y-0 shadow-lg hover:shadow-xl">
+          <button className="opacity-0 group-hover:opacity-100 transition-all duration-500 bg-gray-800 hover:bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-full transform translate-y-3 group-hover:translate-y-0 shadow-lg hover:shadow-xl">
             Add to Cart
           </button>
         </div>
