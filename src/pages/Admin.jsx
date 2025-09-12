@@ -6,8 +6,7 @@ import {
   deleteProduct,
   getProduct,
 } from "../lib/productsApi";
-import { toast } from "react-toastify"; // ⬅️ use toastify
-// no need to import ToastContainer here if it's already in App.jsx
+import { toast } from "react-toastify";
 
 const DEFAULT = {
   id: "",
@@ -60,10 +59,10 @@ export default function Admin() {
 
       if (editingId) {
         await updateProduct(editingId, { ...submitData, id: undefined });
-        toast.success("Product updated ✅");
+        toast.success("Product updated ");
       } else {
         await createProduct(submitData);
-        toast.success("Product created ✅");
+        toast.success("Product created ");
       }
 
       const fresh = await listProducts();
@@ -72,7 +71,7 @@ export default function Admin() {
       setEditingId("");
     } catch (e) {
       console.error(e);
-      toast.error(e?.message || "Save failed ❌");
+      toast.error(e?.message || "Save failed ");
     } finally {
       setSaving(false);
     }
@@ -99,7 +98,7 @@ export default function Admin() {
       });
       setEditingId(id);
       window.scrollTo({ top: 0, behavior: "smooth" });
-      toast.info("Editing mode enabled ✏️");
+      toast.info("Editing mode enabled ");
     } catch (err) {
       console.error("Error loading product:", err);
       toast.error("Failed to load product.");
@@ -118,7 +117,7 @@ export default function Admin() {
       toast.success("Product deleted 🗑️");
     } catch (err) {
       console.error("Delete failed:", err);
-      toast.error("Delete failed ❌");
+      toast.error("Delete failed ");
     }
   }
 
@@ -270,7 +269,7 @@ export default function Admin() {
                     const el = document.getElementById("imgin");
                     if (el.value) {
                       addImage(el.value);
-                      toast.success("Image added ✅");
+                      toast.success("Image added ");
                       el.value = "";
                     } else {
                       toast.warn("Please enter an image URL first.");
