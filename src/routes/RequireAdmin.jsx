@@ -5,7 +5,7 @@ import { useSession } from "../auth/useSession";
 export default function RequireAdmin({ children }) {
   const { isAdmin, loading } = useSession();
   const loc = useLocation();
-  if (loading) return null; // or a spinner
+  if (loading) return null;
   return isAdmin ? (
     children
   ) : (

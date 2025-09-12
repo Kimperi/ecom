@@ -6,6 +6,8 @@ import {
   deleteProduct,
   getProduct,
 } from "../lib/productsApi";
+import { toast } from "react-toastify"; // ⬅️ use toastify
+// no need to import ToastContainer here if it's already in App.jsx
 
 const DEFAULT = {
   id: "",
@@ -35,6 +37,7 @@ export default function Admin() {
         setItems(data);
       } catch (err) {
         console.error("Error loading products:", err);
+        toast.error("Failed to load products.");
       }
     })();
   }, []);
@@ -57,16 +60,19 @@ export default function Admin() {
 
       if (editingId) {
         await updateProduct(editingId, { ...submitData, id: undefined });
+        toast.success("Product updated ✅");
       } else {
         await createProduct(submitData);
+        toast.success("Product created ✅");
       }
+
       const fresh = await listProducts();
       setItems(fresh);
       setForm(DEFAULT);
       setEditingId("");
-      alert("Product saved!");
     } catch (e) {
-      alert(e.message || "Save failed");
+      console.error(e);
+      toast.error(e?.message || "Save failed ❌");
     } finally {
       setSaving(false);
     }
@@ -75,7 +81,10 @@ export default function Admin() {
   async function onEdit(id) {
     try {
       const p = await getProduct(id);
-      if (!p) return;
+      if (!p) {
+        toast.warn("Product not found.");
+        return;
+      }
       setForm({
         id: p.id,
         name: p.name || "",
@@ -90,8 +99,10 @@ export default function Admin() {
       });
       setEditingId(id);
       window.scrollTo({ top: 0, behavior: "smooth" });
+      toast.info("Editing mode enabled ✏️");
     } catch (err) {
       console.error("Error loading product:", err);
+      toast.error("Failed to load product.");
     }
   }
 
@@ -99,13 +110,15 @@ export default function Admin() {
     if (!window.confirm("Delete this product?")) return;
     try {
       await deleteProduct(id);
-      setItems(items.filter((p) => p.id !== id));
+      setItems((prev) => prev.filter((p) => p.id !== id));
       if (editingId === id) {
         setForm(DEFAULT);
         setEditingId("");
       }
+      toast.success("Product deleted 🗑️");
     } catch (err) {
       console.error("Delete failed:", err);
+      toast.error("Delete failed ❌");
     }
   }
 
@@ -257,7 +270,10 @@ export default function Admin() {
                     const el = document.getElementById("imgin");
                     if (el.value) {
                       addImage(el.value);
+                      toast.success("Image added ✅");
                       el.value = "";
+                    } else {
+                      toast.warn("Please enter an image URL first.");
                     }
                   }}
                 >
@@ -364,6 +380,7 @@ export default function Admin() {
                   onClick={() => {
                     setForm(DEFAULT);
                     setEditingId("");
+                    toast.info("Edit canceled.");
                   }}
                 >
                   Cancel Edit
