@@ -34,7 +34,11 @@ function PlaceOrder() {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Enforce digits only for phone field
+    const nextValue = name === "phone" ? value.replace(/\D/g, "") : value;
+
+    setFormData((prev) => ({ ...prev, [name]: nextValue }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
@@ -50,6 +54,9 @@ function PlaceOrder() {
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
     if (!formData.email.trim()) newErrors.email = "Email is required";
     if (!formData.phone.trim()) newErrors.phone = "Phone number is required";
+    if (formData.phone && !/^\d+$/.test(formData.phone)) {
+      newErrors.phone = "Phone number must contain digits only";
+    }
     if (!formData.streetAddress.trim())
       newErrors.streetAddress = "Street address is required";
     if (!formData.city.trim()) newErrors.city = "City is required";
@@ -66,28 +73,26 @@ function PlaceOrder() {
   const handlePlaceOrder = async () => {
     if (!validateForm()) return;
 
-    // Map your form keys to the Lambda's expected "address" object
     const address = {
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,
       phone: formData.phone,
-      street: formData.streetAddress, // <- Lambda expects "street"
+      street: formData.streetAddress,
       city: formData.city,
       state: formData.state,
-      zip: formData.zipCode, // <- Lambda expects "zip"
+      zip: formData.zipCode,
       country: formData.country,
     };
 
     try {
       setLoading(true);
       await placeOrder({ address, paymentMethod: method, shop });
-      // NEW: clear cart centrally via context, then navigate
       shop.finishOrder?.();
       navigate("/orders"); // confirmation page
     } catch (e) {
       console.error(e);
-      alert(e.message || "Could not place order"); // replace with toast if you use react-toastify
+      alert(e.message || "Could not place order"); // can replace with toastify
     } finally {
       setLoading(false);
     }
@@ -155,10 +160,26 @@ function PlaceOrder() {
 
         <div>
           <input
-            type="text"
+            type="tel"
             name="phone"
             value={formData.phone}
             onChange={handleInputChange}
+            inputMode="numeric"
+            pattern="[0-9]*"
+            onKeyDown={(e) => {
+              const allowed = [
+                "Backspace",
+                "Delete",
+                "ArrowLeft",
+                "ArrowRight",
+                "Tab",
+                "Home",
+                "End",
+              ];
+              if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+                e.preventDefault();
+              }
+            }}
             className={`w-full border rounded py-1.5 px-3.5 ${
               errors.phone ? "border-red-500" : "border-gray-300"
             }`}
@@ -266,7 +287,6 @@ function PlaceOrder() {
 
         <div className="mt-12">
           <Title text1="Payment" text2="Method" />
-          {/* Payment Method */}
           <div className="flex gap-3 flex-col lg:flex-row">
             <div
               onClick={() => setMethod("stripe")}
