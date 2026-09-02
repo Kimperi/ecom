@@ -1,14 +1,16 @@
-import { Amplify } from 'aws-amplify';
+import { config, isDemo } from './config.js';
 
-Amplify.configure({
-  Auth: {
-    Cognito: {
-      userPoolId: 'us-east-1_62Oor9ilB',       // <-- your User Pool ID
-      userPoolClientId: '1cg8eah6nisuj4rcmkg8bmgj36', // <-- your App Client ID
-      loginWith: { email: true },
-      signUpVerificationMethod: 'code',
+export async function configureAuth() {
+  if (isDemo) return;
+  const { Amplify } = await import('aws-amplify');
+  Amplify.configure({
+    Auth: {
+      Cognito: {
+        userPoolId: config.userPoolId,
+        userPoolClientId: config.userPoolClientId,
+        loginWith: { email: true },
+        signUpVerificationMethod: 'code',
+      },
     },
-  },
-});
-
-export default {};
+  });
+}

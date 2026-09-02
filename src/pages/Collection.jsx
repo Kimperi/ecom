@@ -1,37 +1,33 @@
-import React, { useContext, useState, useMemo } from "react";
-import { ShopContext } from "../context/ShopContext";
-import { assets } from "../assets/assets";
-import Title from "../components/Title";
-import ProductItem from "../components/ProductItem";
-import LoadingSpinner from "../components/LoadingSpinner";
+import React, { useContext, useState, useMemo } from 'react';
+import { ShopContext } from '../context/ShopContext';
+import { assets } from '../assets/assets';
+import Title from '../components/Title';
+import ProductItem from '../components/ProductItem';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const Collection = () => {
   const { products, loadingProducts } = useContext(ShopContext);
 
   const [showFilter, setShowFilter] = useState(false);
-  const [selectedCategories, setSelectedCategories] = useState([
-    "Men",
-    "Women",
-    "Kids",
-  ]);
+  const [selectedCategories, setSelectedCategories] = useState(['Men', 'Women', 'Kids']);
   const [selectedSubCategories, setSelectedSubCategories] = useState([
-    "Topwear",
-    "Bottomwear",
-    "Winterwear",
+    'Topwear',
+    'Bottomwear',
+    'Winterwear',
   ]);
-  const [sortBy, setSortBy] = useState("relevant");
+  const [sortBy, setSortBy] = useState('relevant');
 
   const Toggle = (e) => {
     const v = e.target.value;
     setSelectedCategories((prev) =>
-      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]
+      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v],
     );
   };
 
   const ToggleSubCategory = (e) => {
     const v = e.target.value;
     setSelectedSubCategories((prev) =>
-      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v]
+      prev.includes(v) ? prev.filter((x) => x !== v) : [...prev, v],
     );
   };
 
@@ -41,13 +37,12 @@ const Collection = () => {
   const filterProducts = useMemo(() => {
     let arr = products.filter(
       (p) =>
-        selectedCategories.includes(p.category) &&
-        selectedSubCategories.includes(p.subCategory)
+        selectedCategories.includes(p.category) && selectedSubCategories.includes(p.subCategory),
     );
 
-    if (sortBy === "low-high") {
+    if (sortBy === 'low-high') {
       arr = [...arr].sort((a, b) => Number(a.price) - Number(b.price));
-    } else if (sortBy === "high-low") {
+    } else if (sortBy === 'high-low') {
       arr = [...arr].sort((a, b) => Number(b.price) - Number(a.price));
     }
     // "relevant" keeps original order (from API)
@@ -68,7 +63,7 @@ const Collection = () => {
         {/* Right side with loading */}
         <div className="flex-1">
           <div className="flex justify-center text-base sm:text-2xl mb-4 mt-7">
-            <Title text1={"ALL"} text2={"COLLECTIONS"} />
+            <Title text1={'ALL'} text2={'COLLECTIONS'} />
           </div>
           <LoadingSpinner text="Loading products..." />
         </div>
@@ -90,7 +85,7 @@ const Collection = () => {
             >
               <svg
                 className={`w-5 h-5 text-gray-500 transition-transform ${
-                  showFilter ? "rotate-180" : ""
+                  showFilter ? 'rotate-180' : ''
                 }`}
                 fill="currentColor"
                 viewBox="0 0 20 20"
@@ -105,18 +100,13 @@ const Collection = () => {
           </div>
 
           {/* Filter Content */}
-          <div className={`${showFilter ? "" : "hidden"} md:block space-y-6`}>
+          <div className={`${showFilter ? '' : 'hidden'} md:block space-y-6`}>
             {/* Categories */}
             <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-3">
-                Categories
-              </h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Categories</h3>
               <div className="space-y-2">
-                {["Men", "Women", "Kids"].map((c) => (
-                  <label
-                    key={c}
-                    className="flex items-center gap-3 cursor-pointer"
-                  >
+                {['Men', 'Women', 'Kids'].map((c) => (
+                  <label key={c} className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       value={c}
@@ -134,11 +124,8 @@ const Collection = () => {
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-3">Types</h3>
               <div className="space-y-2">
-                {["Topwear", "Bottomwear", "Winterwear"].map((s) => (
-                  <label
-                    key={s}
-                    className="flex items-center gap-3 cursor-pointer"
-                  >
+                {['Topwear', 'Bottomwear', 'Winterwear'].map((s) => (
+                  <label key={s} className="flex items-center gap-3 cursor-pointer">
                     <input
                       type="checkbox"
                       value={s}
@@ -154,9 +141,7 @@ const Collection = () => {
 
             {/* Results Count */}
             <div className="pt-4 border-t border-gray-100">
-              <p className="text-xs text-gray-500">
-                Showing {filterProducts.length} products
-              </p>
+              <p className="text-xs text-gray-500">Showing {filterProducts.length} products</p>
             </div>
           </div>
         </div>
@@ -165,7 +150,7 @@ const Collection = () => {
       {/* Right side */}
       <div className="flex-1">
         <div className="flex justify-center text-base sm:text-2xl mb-4 mt-7">
-          <Title text1={"ALL"} text2={"COLLECTIONS"} />
+          <Title text1={'ALL'} text2={'COLLECTIONS'} />
         </div>
 
         {/* Sort */}
