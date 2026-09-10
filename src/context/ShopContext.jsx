@@ -1,120 +1,106 @@
-import { createContext, useState, useEffect, useMemo } from "react";
-import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
-import { listProducts } from "../lib/productsApi"; // ← API source of truth
+import { createContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
+import { listProducts } from '../lib/productsApi';
+import { sanitizeCart, validQuantity, validKey, CURRENCY, DELIVERY_FEE } from '../lib/validation';
+import { isDemo } from '../config';
 
 export const ShopContext = createContext();
+const CART_KEY = `kimperi.${isDemo ? 'demo' : 'aws'}.cart.v1`;
 
-const ShopContextProvider = ({ children }) => {
-  // ----- products from API -----
+export default function ShopContextProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-
-  async function refreshProducts() {
-    try {
-      setLoadingProducts(true);
-      const data = await listProducts();
-      setProducts(Array.isArray(data) ? data : []);
-    } catch (e) {
-      console.error("[ShopContext] listProducts failed:", e);
-      toast.error("Couldn't load products");
-    } finally {
-      setLoadingProducts(false);
-    }
-  }
-
-  useEffect(() => {
-    refreshProducts(); // load once on app start
-  }, []);
-
-  // ----- cart persisted in localStorage -----
   const [cartItems, setCartItems] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("cart") || "{}");
+      return sanitizeCart(JSON.parse(localStorage.getItem(CART_KEY) || '{}'));
     } catch {
       return {};
     }
   });
-
+  const navigate = useNavigate();
+  const refreshProducts = useCallback(async () => {
+    try {
+      const result = await listProducts();
+      setProducts(Array.isArray(result) ? result : []);
+    } catch {
+      toast.error('Could not load products. Check the selected app mode and configuration.');
+    } finally {
+      setLoadingProducts(false);
+    }
+  }, []);
+  useEffect(() => {
+    refreshProducts();
+  }, [refreshProducts]);
   useEffect(() => {
     try {
-      localStorage.setItem("cart", JSON.stringify(cartItems));
-    } catch {}
+      localStorage.setItem(CART_KEY, JSON.stringify(cartItems));
+    } catch {
+      /* Storage can be unavailable in private browsing. */
+    }
   }, [cartItems]);
 
-  const addToCart = (itemId, size) => {
-    if (!size) {
-      toast.error("Please select a size");
+  const addToCart = useCallback(
+    (id, size) => {
+      const product = products.find((p) => String(p.id) === String(id));
+      if (!validKey(String(id)) || !validKey(size) || !product?.sizes?.includes(size)) {
+        toast.error('Please select an available size.');
+        return;
+      }
+      const quantity = (cartItems[id]?.[size] || 0) + 1;
+      if (!validQuantity(quantity)) {
+        toast.error('Maximum quantity is 99 per size.');
+        return;
+      }
+      setCartItems((previous) => ({ ...previous, [id]: { ...previous[id], [size]: quantity } }));
+      toast.success('Item added to cart.');
+    },
+    [products, cartItems],
+  );
+  const updateQuantity = useCallback((id, size, quantity) => {
+    const q = Number(quantity);
+    if (!validKey(String(id)) || !validKey(size) || !validQuantity(q)) {
+      toast.error('Use a whole-number quantity from 1 to 99.');
       return;
     }
-    const cartData = structuredClone(cartItems);
-    if (cartData[itemId]) {
-      cartData[itemId][size] = (cartData[itemId][size] || 0) + 1;
-    } else {
-      cartData[itemId] = { [size]: 1 };
-    }
-    setCartItems(cartData);
-    toast.success("Item added to cart!");
-  };
-
-  const getCartCount = () => {
-    let count = 0;
-    for (const id in cartItems) {
-      const sizes = cartItems[id] || {};
-      for (const s in sizes) {
-        const n = Number(sizes[s]) || 0;
-        if (n > 0) count += n;
-      }
-    }
-    return count;
-  };
-
-  const updateQuantity = (itemId, size, quantity) => {
-    const q = Math.max(1, Number(quantity) || 1);
-    const cartData = structuredClone(cartItems);
-    if (!cartData[itemId]) cartData[itemId] = {};
-    cartData[itemId][size] = q;
-    setCartItems(cartData);
-  };
-
-  const clearCart = () => {
-    setCartItems({});
-    try {
-      localStorage.setItem("cart", JSON.stringify({}));
-    } catch {}
-  };
-
-  const finishOrder = () => clearCart();
-
-  const currency = "MAD";
-  const deliveryFee = 50;
-  const navigate = useNavigate();
-
+    setCartItems((previous) => ({ ...previous, [id]: { ...previous[id], [size]: q } }));
+  }, []);
+  const clearCart = useCallback(() => setCartItems({}), []);
+  const getCartCount = useCallback(
+    () =>
+      Object.values(cartItems).reduce(
+        (total, sizes) => total + Object.values(sizes).reduce((sum, q) => sum + q, 0),
+        0,
+      ),
+    [cartItems],
+  );
   const value = useMemo(
     () => ({
-      // products
       products,
       loadingProducts,
       refreshProducts,
-
-      // cart
       cartItems,
       setCartItems,
       addToCart,
-      getCartCount,
       updateQuantity,
+      getCartCount,
       clearCart,
-      finishOrder,
-
-      // misc
-      currency,
-      deliveryFee,
+      finishOrder: clearCart,
+      currency: CURRENCY,
+      deliveryFee: DELIVERY_FEE,
       navigate,
     }),
-    [products, loadingProducts, cartItems, currency, deliveryFee, navigate]
+    [
+      products,
+      loadingProducts,
+      refreshProducts,
+      cartItems,
+      addToCart,
+      updateQuantity,
+      getCartCount,
+      clearCart,
+      navigate,
+    ],
   );
-
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
-};
-
-export default ShopContextProvider;
+}

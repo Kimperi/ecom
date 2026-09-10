@@ -1,35 +1,40 @@
-// src/pages/Orders.jsx
-import React from "react";
-import Title from "../components/Title";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from 'react-router-dom';
+import { isDemo } from '../config';
 
-const Orders = () => {
+export default function Orders() {
+  const { state } = useLocation();
+  const receipt = state?.receipt;
   return (
-    <div className="border-t pt-16 mx-10 md:mx-20 min-h-[60vh]">
-      <div className="text-2xl">
-        <Title text1="ORDER" text2="CONFIRMED" />
-      </div>
-
-      <div className="mt-6 bg-green-50 border border-green-200 rounded p-6">
-        <p className="text-gray-900 text-lg font-semibold">
-          Your order has been confirmed ✅
+    <section className="max-w-2xl mx-auto px-6 py-16 min-h-[50vh]">
+      <p className="text-sm uppercase tracking-widest text-slate-500">
+        {isDemo ? 'Portfolio demonstration' : 'Checkout'}
+      </p>
+      <h1 className="text-3xl prata-regular mt-3 mb-6">
+        {!receipt
+          ? 'No checkout to display'
+          : receipt.demo
+            ? 'Demo checkout complete'
+            : 'Order request submitted'}
+      </h1>
+      <p className="text-slate-600 leading-relaxed">
+        {!receipt
+          ? 'Complete the checkout journey to see its result here. This page is not an order-history service.'
+          : receipt.demo
+            ? 'You have completed the sample shopping journey. No real order was placed, no payment was collected and no email was sent.'
+            : 'Your request was accepted by the configured service. This is not proof of payment or a delivery guarantee.'}
+      </p>
+      {receipt?.reference && (
+        <p className="mt-5">
+          Reference: <span className="font-mono">{receipt.reference}</span>
         </p>
-        <p className="text-gray-700 mt-2">
-          Our delivery partner will contact you shortly to arrange delivery.
-          Thank you for your Order :)
-        </p>
-      </div>
-
-      <div className="mt-8">
-        <Link
-          to="/"
-          className="inline-block bg-black text-white px-6 py-3 rounded hover:bg-gray-800 transition"
-        >
-          Continue shopping
-        </Link>
-      </div>
-    </div>
+      )}
+      {receipt?.demo && <p className="mt-2">Sample total: {receipt.totals.total.toFixed(2)} MAD</p>}
+      <Link
+        to="/collection"
+        className="inline-block mt-8 bg-slate-900 text-white px-6 py-3 rounded"
+      >
+        Continue shopping
+      </Link>
+    </section>
   );
-};
-
-export default Orders;
+}
