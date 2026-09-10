@@ -48,17 +48,21 @@ export default function Admin() {
     setSaving(true);
     try {
       const submitData = {
-        ...form,
+        name: form.name,
+        description: form.description,
         price: Number(form.price) || 0,
+        image: form.image,
+        category: form.category,
+        subCategory: form.subCategory,
         sizes: form.sizes
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean),
-        date: Date.now(),
+        bestseller: form.bestseller,
       };
 
       if (editingId) {
-        await updateProduct(editingId, { ...submitData, id: undefined });
+        await updateProduct(editingId, submitData);
         toast.success("Product updated ");
       } else {
         await createProduct(submitData);
