@@ -1,12 +1,12 @@
-import { Amplify } from 'aws-amplify';
+import { Amplify } from "aws-amplify";
+import { COGNITO_CONFIG } from "./config";
 
 Amplify.configure({
   Auth: {
     Cognito: {
-      userPoolId: 'us-east-1_62Oor9ilB',       // <-- your User Pool ID
-      userPoolClientId: '1cg8eah6nisuj4rcmkg8bmgj36', // <-- your App Client ID
+      ...COGNITO_CONFIG,
       loginWith: { email: true },
-      signUpVerificationMethod: 'code',
+      signUpVerificationMethod: "code",
     },
   },
 });

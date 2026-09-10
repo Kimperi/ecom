@@ -12,6 +12,30 @@ dist
 dist-ssr
 *.local
 
+# Environment files (the example is safe to commit)
+.env
+.env.*
+!.env.example
+
+# Test and tool output
+coverage
+.eslintcache
+.vite
+
+# Terraform local state and plans
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+*.tfplan
+crash.log
+crash.*.log
+
+# AWS build output
+.aws-sam/
+cdk.out/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

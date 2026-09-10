@@ -17,7 +17,7 @@ import Footer from "./components/Footer";
 import RequireAuth from "./auth/RequiredAuth";
 import Admin from "./pages/Admin";
 import Login from "./pages/Login";
-import { ToastContainer, toast } from "react-toastify";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import RequireAdmin from "./routes/RequireAdmin";
 

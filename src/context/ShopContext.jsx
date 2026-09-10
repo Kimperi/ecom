@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { listProducts } from "../lib/productsApi"; // ← API source of truth
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ShopContext = createContext();
 
 const ShopContextProvider = ({ children }) => {
@@ -39,7 +40,9 @@ const ShopContextProvider = ({ children }) => {
   useEffect(() => {
     try {
       localStorage.setItem("cart", JSON.stringify(cartItems));
-    } catch {}
+    } catch {
+      // Storage may be unavailable; the in-memory cart still works.
+    }
   }, [cartItems]);
 
   const addToCart = (itemId, size) => {
@@ -81,7 +84,9 @@ const ShopContextProvider = ({ children }) => {
     setCartItems({});
     try {
       localStorage.setItem("cart", JSON.stringify({}));
-    } catch {}
+    } catch {
+      // Storage may be unavailable; React state was still cleared.
+    }
   };
 
   const finishOrder = () => clearCart();

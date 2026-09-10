@@ -1,18 +1,12 @@
-
-// src/lib/productsApi.js
 import { fetchAuthSession } from "@aws-amplify/auth";
+import { API_BASE_URL } from "../config";
 
-// <<< set this >>>
-const API_BASE = "https://dhpo2yclof.execute-api.us-east-1.amazonaws.com";
-
-
-// always prefer ID token for API Gateway JWT authorizer; fallback to access token
 async function authHeader() {
   try {
-    const s = await fetchAuthSession();
+    const session = await fetchAuthSession();
     const token =
-      s?.tokens?.idToken?.toString() ||
-      s?.tokens?.accessToken?.toString() ||
+      session?.tokens?.accessToken?.toString() ||
+      session?.tokens?.idToken?.toString() ||
       "";
     return token ? { Authorization: `Bearer ${token}` } : {};
   } catch {
@@ -21,58 +15,63 @@ async function authHeader() {
 }
 
 export async function listProducts() {
-  const r = await fetch(`${API_BASE}/products`, {
+  const response = await fetch(`${API_BASE_URL}/products`, {
     method: "GET",
-    headers: await authHeader(), // include if your GET is protected
+    headers: await authHeader(),
   });
-  if (!r.ok) throw new Error(`List failed (${r.status})`);
-  return r.json();
+  if (!response.ok) throw new Error(`List failed (${response.status})`);
+  return response.json();
 }
 
 export async function getProduct(id) {
-  const r = await fetch(`${API_BASE}/products/${encodeURIComponent(id)}`, {
-    method: "GET",
-    headers: await authHeader(), // include if protected
-  });
-  if (r.status === 404) return null;
-  if (!r.ok) throw new Error(`Get failed (${r.status})`);
-  return r.json();
+  const response = await fetch(
+    `${API_BASE_URL}/products/${encodeURIComponent(id)}`,
+    {
+      method: "GET",
+      headers: await authHeader(),
+    },
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`Get failed (${response.status})`);
+  return response.json();
 }
 
-export async function createProduct(prod) {
-  const r = await fetch(`${API_BASE}/products`, {
+export async function createProduct(product) {
+  const response = await fetch(`${API_BASE_URL}/products`, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(await authHeader()) },
-    body: JSON.stringify(prod),
+    body: JSON.stringify(product),
   });
-  if (!r.ok) {
-    const t = await r.text().catch(() => "");
-    throw new Error(`Create failed (${r.status}) ${t}`);
-  }
-  return r.json();
+  if (!response.ok) throw new Error(`Create failed (${response.status})`);
+  return response.json();
 }
 
-export async function updateProduct(id, patch) {
-  const r = await fetch(`${API_BASE}/products/${encodeURIComponent(id)}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json", ...(await authHeader()) },
-    body: JSON.stringify(patch),
-  });
-  if (!r.ok) {
-    const t = await r.text().catch(() => "");
-    throw new Error(`Update failed (${r.status}) ${t}`);
-  }
-  return r.json();
+export async function updateProduct(id, product) {
+  const response = await fetch(
+    `${API_BASE_URL}/products/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(await authHeader()),
+      },
+      body: JSON.stringify(product),
+    },
+  );
+  if (!response.ok) throw new Error(`Update failed (${response.status})`);
+  return response.json();
 }
 
 export async function deleteProduct(id) {
-  const r = await fetch(`${API_BASE}/products/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-    headers: await authHeader(),
-  });
-  if (!r.ok && r.status !== 204) {
-    const t = await r.text().catch(() => "");
-    throw new Error(`Delete failed (${r.status}) ${t}`);
+  const response = await fetch(
+    `${API_BASE_URL}/products/${encodeURIComponent(id)}`,
+    {
+      method: "DELETE",
+      headers: await authHeader(),
+    },
+  );
+  if (!response.ok && response.status !== 204) {
+    throw new Error(`Delete failed (${response.status})`);
   }
   return true;
 }

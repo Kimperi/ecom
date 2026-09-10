@@ -4,9 +4,9 @@ import { ShopContext } from "../context/ShopContext";
 
 import RelatedProduct from "../components/RelatedProduct";
 import { fetchAuthSession } from "@aws-amplify/auth";
+import { API_BASE_URL } from "../config";
 
-const REVIEWS_API =
-  "https://87nhgr1ouh.execute-api.us-east-1.amazonaws.com/reviews";
+const REVIEWS_API = `${API_BASE_URL}/reviews`;
 
 export default function Product() {
   const { productId } = useParams();
@@ -57,7 +57,7 @@ export default function Product() {
   const getAuthHeaderIfAny = async () => {
     try {
       const session = await fetchAuthSession();
-      const jwt = session.tokens?.idToken?.toString();
+      const jwt = session.tokens?.accessToken?.toString();
       return jwt ? { Authorization: `Bearer ${jwt}` } : {};
     } catch {
       return {};
@@ -121,7 +121,9 @@ export default function Product() {
         try {
           const j = await res.json();
           if (j?.error) msg = j.error;
-        } catch {}
+        } catch {
+          // Keep the status-based fallback when the response is not JSON.
+        }
         if (res.status === 401) msg = "Please log in to write a review.";
         if (res.status === 409) msg = "You already reviewed this product.";
         throw new Error(msg);
@@ -150,7 +152,7 @@ export default function Product() {
 
   useEffect(() => {
     fetchAuthSession()
-      .then((s) => setIsLoggedIn(!!s.tokens?.idToken))
+      .then((s) => setIsLoggedIn(!!s.tokens?.accessToken))
       .catch(() => setIsLoggedIn(false));
     getUserNameFromCognito().then((name) => setForm((f) => ({ ...f, name })));
   }, []);
