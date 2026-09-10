@@ -6,6 +6,13 @@ export class RequestValidationError extends Error {
   }
 }
 
+export class ConflictError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ConflictError";
+  }
+}
+
 const SECURITY_HEADERS = Object.freeze({
   "cache-control": "no-store",
   "content-type": "application/json; charset=utf-8",

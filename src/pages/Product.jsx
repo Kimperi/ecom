@@ -110,7 +110,6 @@ export default function Product() {
         method: "POST",
         headers: { "Content-Type": "application/json", ...auth },
         body: JSON.stringify({
-          name: form.name || "Anonymous",
           rating: Number(form.rating),
           comment: form.comment.trim(),
         }),
