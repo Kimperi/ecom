@@ -1,6 +1,6 @@
 // src/routes/RequireAdmin.jsx
-import { Navigate, useLocation } from "react-router-dom";
-import { useSession } from "../auth/useSession";
+import { Navigate, useLocation } from 'react-router-dom';
+import { useSession } from '../auth/useSession';
 
 export default function RequireAdmin({ children }) {
   const { isAdmin, loading } = useSession();
@@ -9,10 +9,6 @@ export default function RequireAdmin({ children }) {
   return isAdmin ? (
     children
   ) : (
-    <Navigate
-      to="/login"
-      replace
-      state={{ from: loc.pathname, message: "Admin only" }}
-    />
+    <Navigate to="/login" replace state={{ from: loc.pathname, message: 'Admin only' }} />
   );
 }

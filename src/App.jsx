@@ -1,25 +1,27 @@
-import React, { useContext } from "react";
-import { Routes, Route } from "react-router-dom";
-import { useScrollToTop } from "./hooks/useScrollToTop";
-import { ShopContext } from "./context/ShopContext";
-import LoadingSpinner from "./components/LoadingSpinner";
+import React, { useContext } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { useScrollToTop } from './hooks/useScrollToTop';
+import { ShopContext } from './context/ShopContext';
+import LoadingSpinner from './components/LoadingSpinner';
 
-import Home from "./pages/Home";
-import PlaceOrder from "./pages/PlaceOrder";
-import Cart from "./pages/Cart";
-import Collection from "./pages/Collection";
-import Contact from "./pages/Contact";
-import About from "./pages/About";
-import Product from "./pages/Product";
-import Orders from "./pages/Orders";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
-import RequireAuth from "./auth/RequiredAuth";
-import Admin from "./pages/Admin";
-import Login from "./pages/Login";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import RequireAdmin from "./routes/RequireAdmin";
+import Home from './pages/Home';
+import PlaceOrder from './pages/PlaceOrder';
+import Cart from './pages/Cart';
+import Collection from './pages/Collection';
+import Contact from './pages/Contact';
+import About from './pages/About';
+import Product from './pages/Product';
+import Orders from './pages/Orders';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import RequireAuth from './auth/RequiredAuth';
+import Admin from './pages/Admin';
+import Login from './pages/Login';
+import { ToastContainer } from 'react-toastify';
+import { isDemo } from './config';
+import { Link } from 'react-router-dom';
+import 'react-toastify/dist/ReactToastify.css';
+import RequireAdmin from './routes/RequireAdmin';
 
 const App = () => {
   // This will automatically scroll to top on every route change
@@ -39,6 +41,14 @@ const App = () => {
   return (
     <div>
       <ToastContainer />
+      {isDemo && (
+        <aside className="bg-slate-900 text-white text-center text-sm py-3 px-4">
+          Portfolio demo · No real purchases, payments or emails.
+          <Link to="/login" className="ml-3 underline underline-offset-4">
+            Choose a demo profile
+          </Link>
+        </aside>
+      )}
       <Navbar />
 
       <Routes>
@@ -51,7 +61,14 @@ const App = () => {
           }
         />
         <Route path="/" element={<Home />} />
-        <Route path="/place-order" element={<PlaceOrder />} />
+        <Route
+          path="/place-order"
+          element={
+            <RequireAuth>
+              <PlaceOrder />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/cart"
           element={
@@ -66,6 +83,17 @@ const App = () => {
         <Route path="/product/:productId" element={<Product />} />
         <Route path="/orders" element={<Orders />} />
         <Route path="/login" element={<Login />} />
+        <Route
+          path="*"
+          element={
+            <div className="p-16 text-center">
+              <h1 className="text-2xl">Page not found</h1>
+              <Link to="/" className="underline">
+                Return to the store
+              </Link>
+            </div>
+          }
+        />
       </Routes>
       <Footer />
     </div>
