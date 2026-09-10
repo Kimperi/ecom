@@ -39,7 +39,9 @@ export async function placeOrder({ address, paymentMethod = "cod", shop }) {
 
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.message || `Order failed (${response.status})`);
+    throw new Error(
+      data?.error?.message || data?.message || `Order failed (${response.status})`,
+    );
   }
   return data;
 }

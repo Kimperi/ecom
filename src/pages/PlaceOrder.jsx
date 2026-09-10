@@ -3,15 +3,13 @@ import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import Title from "../components/Title";
 import CartTotal from "../components/CartTotal";
-import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
-import { placeOrder } from "../lib/placeOrder"; // <-- uses your API URL
+import { placeOrder } from "../lib/placeOrder";
 
 function PlaceOrder() {
   const navigate = useNavigate();
   const shop = useContext(ShopContext);
 
-  const [method, setMethod] = useState("cod");
   const [loading, setLoading] = useState(false);
 
   // Form state
@@ -87,9 +85,13 @@ function PlaceOrder() {
 
     try {
       setLoading(true);
-      await placeOrder({ address, paymentMethod: method, shop });
+      const receipt = await placeOrder({
+        address,
+        paymentMethod: "cod",
+        shop,
+      });
       shop.finishOrder?.();
-      navigate("/orders"); // confirmation page
+      navigate("/orders", { state: { receipt } });
     } catch (e) {
       console.error(e);
       alert(e.message || "Could not place order"); // can replace with toastify
@@ -288,37 +290,8 @@ function PlaceOrder() {
         <div className="mt-12">
           <Title text1="Payment" text2="Method" />
           <div className="flex gap-3 flex-col lg:flex-row">
-            <div
-              onClick={() => setMethod("stripe")}
-              className="flex items-center gap-3 border p-2 px-3 cursor-pointer"
-            >
-              <p
-                className={`min-w-3.5 h-3.5 border rounded-full ${
-                  method === "stripe" ? "bg-black" : ""
-                }`}
-              />
-              <img className="h-5 mx-4" src={assets.stripe_logo} alt="stripe" />
-            </div>
-            <div
-              onClick={() => setMethod("paypal")}
-              className="flex items-center gap-3 border p-2 px-3 cursor-pointer"
-            >
-              <p
-                className={`min-w-3.5 h-3.5 border rounded-full ${
-                  method === "paypal" ? "bg-black" : ""
-                }`}
-              />
-              <img className="h-5 mx-4" src={assets.paypal_logo} alt="paypal" />
-            </div>
-            <div
-              onClick={() => setMethod("cod")}
-              className="flex items-center gap-3 border p-2 px-3 cursor-pointer"
-            >
-              <p
-                className={`min-w-3.5 h-3.5 border rounded-full ${
-                  method === "cod" ? "bg-black" : ""
-                }`}
-              />
+            <div className="flex items-center gap-3 border p-2 px-3">
+              <p className="min-w-3.5 h-3.5 border rounded-full bg-black" />
               <p className="text-gray-500 text-sm font-medium mx-4">
                 CASH ON DELIVERY
               </p>

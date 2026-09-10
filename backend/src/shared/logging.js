@@ -14,7 +14,6 @@ export function logFailure(logger, eventName, error, metadata = {}) {
       level: "ERROR",
       event: eventName,
       errorName: error?.name || "Error",
-      errorMessage: error?.message || "Unknown error",
       ...metadata,
     }),
   );

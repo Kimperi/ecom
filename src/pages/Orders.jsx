@@ -1,9 +1,11 @@
 // src/pages/Orders.jsx
 import React from "react";
 import Title from "../components/Title";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const Orders = () => {
+  const receipt = useLocation().state?.receipt;
+
   return (
     <div className="border-t pt-16 mx-10 md:mx-20 min-h-[60vh]">
       <div className="text-2xl">
@@ -18,6 +20,14 @@ const Orders = () => {
           Our delivery partner will contact you shortly to arrange delivery.
           Thank you for your Order :)
         </p>
+        {receipt && (
+          <div className="mt-4 text-sm text-gray-700">
+            <p>Order: {receipt.orderId}</p>
+            <p>
+              Total: {(receipt.totalMinor / 100).toFixed(2)} {receipt.currency}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="mt-8">
