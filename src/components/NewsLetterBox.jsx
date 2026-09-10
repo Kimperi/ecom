@@ -1,40 +1,16 @@
-import React from "react";
-
-const NewsLetterBox = () => {
-  const onSubmitHandler = (event) => {
-    event.preventDefault();
-    // Add your newsletter subscription logic here
-    console.log("Newsletter subscription submitted");
-  };
-
+import { Link } from 'react-router-dom';
+export default function NewsLetterBox() {
   return (
-    <div className="text-center mx-4 md:mx-6">
-      <p className="text-2xl font-medium text-gray-800">
-        Subscribe now & get 20% off
+    <section className="max-w-4xl mx-auto text-center px-6 py-12 bg-slate-50 rounded-xl">
+      <p className="text-sm uppercase tracking-widest text-slate-500">Explore the implementation</p>
+      <h2 className="text-2xl prata-regular mt-3">More than a storefront</h2>
+      <p className="text-slate-600 mt-4">
+        Discover the architecture, the AWS services and the engineering decisions behind this
+        project.
       </p>
-      <p className="text-gray-400 mt-3">
-        Be the first to know about new arrivals, special deals, and more —
-        straight to your inbox.
-      </p>
-      <form
-        onSubmit={onSubmitHandler}
-        className="w-full sm:w-1/2 flex items-center gap-3 mx-auto mt-6"
-      >
-        <input
-          type="email"
-          placeholder="Enter your email"
-          className="w-full sm:flex-1 outline-none border border-gray-300 px-4 py-3 rounded"
-          required
-        />
-        <button
-          type="submit"
-          className="bg-black text-white text-xs px-10 py-4 rounded hover:bg-gray-800 transition"
-        >
-          SUBSCRIBE
-        </button>
-      </form>
-    </div>
+      <Link to="/about" className="inline-block underline mt-5 font-semibold">
+        About the project
+      </Link>
+    </section>
   );
-};
-
-export default NewsLetterBox;
+}

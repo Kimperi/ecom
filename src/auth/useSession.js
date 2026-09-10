@@ -1,37 +1,30 @@
-// src/auth/useSession.js
-import { fetchAuthSession } from "@aws-amplify/auth";
-import { Hub } from "aws-amplify/utils";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { fetchAuthSession, subscribeAuth } from './client.js';
+import { sessionUser } from './session.js';
 
 export function useSession() {
   const [user, setUser] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  async function load() {
-    try {
-      const session = await fetchAuthSession();        // ID token with claims
-      const id = session?.tokens?.idToken;
-      const p = id?.payload ?? {};
-      setUser({
-        sub: p.sub,
-        email: p.email,
-        username: p["cognito:username"] || p["preferred_username"] || p.email,
-      });
-      setIsAdmin((p["cognito:groups"] || []).includes("admin"));
-    } catch {
-      setUser(null);
-      setIsAdmin(false);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
+    let active = true;
+    let generation = 0;
+    async function load() {
+      const request = ++generation;
+      try {
+        const result = sessionUser(await fetchAuthSession());
+        if (active && request === generation) setUser(result);
+      } catch {
+        if (active && request === generation) setUser(null);
+      } finally {
+        if (active && request === generation) setLoading(false);
+      }
+    }
+    const stop = subscribeAuth(load);
     load();
-    const un = Hub.listen("auth", load);  // refresh on sign-in/out
-    return () => un();
+    return () => {
+      active = false;
+      stop();
+    };
   }, []);
-
-  return { user, isAdmin, loading };
+  return { user, isAdmin: user?.isAdmin === true, loading };
 }

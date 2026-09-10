@@ -1,9 +1,8 @@
-import React, { useContext, useMemo } from "react";
-import { ShopContext } from "../context/ShopContext";
+import React, { useContext, useMemo } from 'react';
+import { ShopContext } from '../context/ShopContext';
 
 const CartTotal = () => {
-  const { cartItems, products, deliveryFee, currency } =
-    useContext(ShopContext);
+  const { cartItems, products, deliveryFee, currency } = useContext(ShopContext);
 
   const { subtotal, itemsCount } = useMemo(() => {
     let subtotalAcc = 0;

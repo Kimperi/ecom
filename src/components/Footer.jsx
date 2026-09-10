@@ -1,41 +1,22 @@
-import React from "react";
-import { assets } from "../assets/assets";
-
-const Footer = () => {
+import { Link } from 'react-router-dom';
+import { assets } from '../assets/assets';
+export default function Footer() {
   return (
-    <div className="w-full bg-white border-t border-gray-200 mt-10">
-      <div className="flex justify-center px-4">
-        <div className="flex flex-col md:grid grid-cols-[3fr_1fr_1fr] gap-14 my-10 mt-20 text-xs sm:text-sm md:text-base max-w-6xl w-full">
-          <div>
-            <img src={assets.logo} className="mb-5 w-32" alt="" />
-            <p className="w-full md:w-2/3 text-gray-600">
-              At KIMPERI, we blend modern trends with timeless style. Our
-              mission is to offer quality clothing that makes you feel confident
-              and comfortable, every day.
-            </p>
-          </div>
-
-          <div className=" md:text-left">
-            <p className="text-xl font-medium mb-5">COMPANY</p>
-            <ul className="flex flex-col gap-1 text-gray-600">
-              <li>Home</li>
-              <li>About us</li>
-              <li>Delivery</li>
-              <li>Privacy policy</li>
-            </ul>
-          </div>
-
-          <div className=" md:text-left">
-            <p className="text-xl font-medium mb-5">GET IN TOUCH</p>
-            <ul className="flex flex-col gap-1 text-gray-600">
-              <li>+212 641672392</li>
-              <li>baeljouhari@gmail.com</li>
-            </ul>
-          </div>
+    <footer className="border-t mt-16 px-6 py-10">
+      <div className="max-w-6xl mx-auto flex flex-wrap justify-between gap-8">
+        <div className="max-w-md">
+          <img src={assets.logo} alt="KIMPERI" className="w-32 mb-4" />
+          <p className="text-sm text-slate-500">
+            A React & AWS serverless e-commerce portfolio by Badr El Jouhari. Built to explore cloud
+            architecture through a complete shopping journey.
+          </p>
         </div>
+        <nav aria-label="Footer" className="flex flex-col gap-3 text-sm">
+          <Link to="/collection">Collection</Link>
+          <Link to="/about">About the project</Link>
+          <a href="https://github.com/Kimperi/ecom">Source & documentation</a>
+        </nav>
       </div>
-    </div>
+    </footer>
   );
-};
-
-export default Footer;
+}

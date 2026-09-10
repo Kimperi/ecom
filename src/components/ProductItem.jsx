@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { assets } from "../assets/assets";
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { assets } from '../assets/assets';
 
 export default function ProductItem({ id, name, price, image }) {
   const [imageLoading, setImageLoading] = useState(true);
@@ -8,9 +8,9 @@ export default function ProductItem({ id, name, price, image }) {
 
   const thumb = Array.isArray(image)
     ? image[0]
-    : typeof image === "string" && image.length > 0
-    ? image
-    : assets.logo;
+    : typeof image === 'string' && image.length > 0
+      ? image
+      : assets.logo;
 
   const displayPrice = Number(price);
 
@@ -42,7 +42,7 @@ export default function ProductItem({ id, name, price, image }) {
           src={thumb}
           alt={name}
           className={`h-full w-full object-cover transition-all duration-700 group-hover:scale-110 ${
-            imageLoading ? "opacity-0" : "opacity-100"
+            imageLoading ? 'opacity-0' : 'opacity-100'
           }`}
           loading="lazy"
           onLoad={handleImageLoad}
@@ -83,9 +83,7 @@ export default function ProductItem({ id, name, price, image }) {
           </div>
 
           {/* Add to Cart Button */}
-          <button className="opacity-0 group-hover:opacity-100 transition-all duration-500 bg-gray-800 hover:bg-gray-900 text-white text-xs font-semibold px-4 py-2 rounded-full transform translate-y-3 group-hover:translate-y-0 shadow-lg hover:shadow-xl">
-            Add to Cart
-          </button>
+          <span className="text-xs font-semibold underline underline-offset-4">View product</span>
         </div>
       </div>
     </Link>
