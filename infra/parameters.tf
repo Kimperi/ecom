@@ -5,6 +5,9 @@ locals {
     cognito_app_client_id = aws_cognito_user_pool_client.web.id
     amplify_app_id        = aws_amplify_app.frontend.id
     amplify_branch_name   = aws_amplify_branch.main.branch_name
+    products_lambda_name  = aws_lambda_function.api["products"].function_name
+    reviews_lambda_name   = aws_lambda_function.api["reviews"].function_name
+    orders_lambda_name    = aws_lambda_function.api["orders"].function_name
   }
 }
 

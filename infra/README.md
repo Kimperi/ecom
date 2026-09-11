@@ -128,3 +128,34 @@ The API URL, Cognito pool ID, and client ID are public configuration values, not
 credentials. Terraform stores them in outputs and in a dedicated SSM Parameter
 Store path so the future CI workflow can build the Vite app without reading the
 entire Terraform state.
+
+## Enable GitHub Actions deployment
+
+The Terraform application creates a GitHub OIDC provider when the AWS account
+does not already have one, plus a deployment role restricted to this repository
+and the `main` branch. The role can update only the three Lambda packages, read
+the public build parameters, and start deployments for this Amplify app.
+
+After the first application apply, create these non-secret GitHub repository
+variables from **Settings > Secrets and variables > Actions > Variables**:
+
+- `AWS_DEPLOY_ROLE_ARN`: value of `github_deploy_role_arn`.
+- `AWS_REGION`: the region used by Terraform.
+- `FRONTEND_CONFIG_PREFIX`: value of `frontend_ssm_parameter_prefix` without a
+  trailing slash, for example `/ecom-dev/frontend`.
+
+No AWS access key or secret access key is required. The workflow requests a
+short-lived credential through OIDC only after its tests and security scan pass.
+
+The repository may use GitHub's newer immutable OIDC subject format. If AWS
+rejects the standard subject, set `github_oidc_subject` in the ignored
+`terraform.tfvars` to the exact immutable subject for this repository and apply
+again.
+
+The deployment workflow intentionally does not run `terraform apply`. Review
+infrastructure changes through a Terraform plan and apply them manually. Code
+changes on `main` can then update the Lambda packages and the manually connected
+Amplify branch without granting GitHub permission to delete infrastructure.
+
+For stronger repository governance, protect `main`, require a pull request, and
+make all three CI jobs required status checks before merging.

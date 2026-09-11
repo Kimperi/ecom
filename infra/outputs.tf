@@ -39,5 +39,15 @@ output "dynamodb_table_names" {
 
 output "frontend_ssm_parameter_prefix" {
   description = "Parameter Store prefix used later by GitHub Actions without reading Terraform state."
-  value       = "/${local.name_prefix}/frontend/"
+  value       = "/${local.name_prefix}/frontend"
+}
+
+output "github_deploy_role_arn" {
+  description = "Set this non-secret value as the AWS_DEPLOY_ROLE_ARN GitHub Actions variable."
+  value       = aws_iam_role.github_deploy.arn
+}
+
+output "github_oidc_subject" {
+  description = "Exact GitHub OIDC subject trusted by AWS."
+  value       = local.github_oidc_subject
 }

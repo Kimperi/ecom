@@ -102,3 +102,43 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "github_owner" {
+  description = "GitHub repository owner trusted by the deployment role."
+  type        = string
+  default     = "Kimperi"
+}
+
+variable "github_repository" {
+  description = "GitHub repository trusted by the deployment role."
+  type        = string
+  default     = "ecom"
+}
+
+variable "github_branch" {
+  description = "Only this GitHub branch may assume the deployment role."
+  type        = string
+  default     = "main"
+}
+
+variable "github_oidc_subject" {
+  description = "Optional exact GitHub OIDC subject override, including the immutable owner/repository ID format when enabled."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "github_oidc_provider_arn" {
+  description = "ARN of an existing account-wide GitHub OIDC provider. Leave null to create it."
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition = (
+      var.github_oidc_provider_arn == null ||
+      can(regex("^arn:aws:iam::[0-9]{12}:oidc-provider/token\\.actions\\.githubusercontent\\.com$", var.github_oidc_provider_arn))
+    )
+    error_message = "Use the ARN of the token.actions.githubusercontent.com IAM OIDC provider."
+  }
+}

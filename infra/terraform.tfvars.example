@@ -13,6 +13,15 @@ currency                    = "MAD"
 log_retention_days          = 14
 lambda_reserved_concurrency = 5
 
+github_owner      = "Kimperi"
+github_repository = "ecom"
+github_branch     = "main"
+
+# Only set these when the AWS account already has the provider or the repository
+# uses GitHub's immutable OIDC subject format.
+# github_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+# github_oidc_subject      = "repo:owner@123/repository@456:ref:refs/heads/main"
+
 additional_tags = {
   Owner = "your-name"
 }
