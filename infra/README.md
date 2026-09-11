@@ -20,8 +20,8 @@ import, change, or delete old manually created resources.
 
 ## Security and cost choices
 
-- Remote S3 state with encryption, versioning, public access blocked, TLS-only
-  access, and native S3 lock files.
+- Remote S3 state with a rotating customer-managed KMS key, versioning, public
+  access blocked, TLS-only access, and native S3 lock files.
 - No AWS access key, password, token, real email address, or `.tfvars` file committed.
 - Separate least-privilege IAM role for each Lambda.
 - JWT validation at API Gateway and role checks inside the Products Lambda.
@@ -51,10 +51,11 @@ terraform init
 terraform plan -out bootstrap.tfplan
 terraform apply bootstrap.tfplan
 terraform output -raw state_bucket_name
+terraform output -raw state_kms_key_arn
 ```
 
 Edit the ignored `terraform.tfvars` with the region/profile you use. Copy the
-bucket output into an ignored `infra/backend.hcl` based on
+bucket and KMS outputs into an ignored `infra/backend.hcl` based on
 `backend.hcl.example`.
 
 The bootstrap state remains local and ignored. Back it up securely because it
@@ -121,6 +122,11 @@ This removes only resources recorded in this Terraform state. It does not
 remove old manually created AWS resources. Keep the small state bucket for the
 next demonstration, or remove it separately only after every dependent stack
 has been destroyed and its state has been safely archived.
+
+The customer-managed state key has a small monthly KMS cost. It is used because
+Terraform state can contain sensitive infrastructure data. If the whole
+portfolio environment must be removed, destroy the application first and the
+bootstrap last; KMS keeps the key in a seven-day pending-deletion period.
 
 ## Outputs used by the frontend
 

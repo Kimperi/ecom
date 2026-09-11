@@ -2,6 +2,17 @@ resource "random_id" "bucket_suffix" {
   byte_length = 4
 }
 
+resource "aws_kms_key" "terraform_state" {
+  description             = "Encrypts the ecom Terraform state."
+  enable_key_rotation     = true
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "terraform_state" {
+  name          = "alias/ecom-terraform-state-${random_id.bucket_suffix.hex}"
+  target_key_id = aws_kms_key.terraform_state.key_id
+}
+
 resource "aws_s3_bucket" "terraform_state" {
   bucket        = "${var.state_bucket_prefix}-${random_id.bucket_suffix.hex}"
   force_destroy = false
@@ -29,7 +40,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "terraform_state" 
 
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
+      kms_master_key_id = aws_kms_key.terraform_state.arn
+      sse_algorithm     = "aws:kms"
     }
     bucket_key_enabled = true
   }
