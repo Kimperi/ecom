@@ -1,0 +1,206 @@
+name: Deploy application
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/deploy.yml"
+      - "backend/**"
+      - "index.html"
+      - "package-lock.json"
+      - "package.json"
+      - "src/**"
+  workflow_dispatch:
+
+concurrency:
+  group: ecom-production-deployment
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify deployment candidate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      - name: Install locked dependencies
+        run: |
+          npm ci --ignore-scripts
+          npm --prefix backend ci --ignore-scripts
+
+      - name: Run quality gate
+        run: |
+          npm run lint
+          npm test
+          npm audit --audit-level=high
+          npm --prefix backend audit --audit-level=high
+
+      - name: Scan complete Git history for secrets
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Scan deployment candidate
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+
+  deploy:
+    name: Deploy Lambdas and Amplify
+    needs: verify
+    if: ${{ vars.AWS_DEPLOY_ROLE_ARN != '' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'eu-west-3' }}
+      CONFIG_PREFIX: ${{ vars.FRONTEND_CONFIG_PREFIX || '/ecom-dev/frontend' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      - name: Obtain temporary AWS credentials
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: github-ecom-${{ github.run_id }}
+          mask-aws-account-id: true
+
+      - name: Load public deployment configuration
+        id: config
+        shell: bash
+        run: |
+          get_parameter() {
+            aws ssm get-parameter \
+              --name "${CONFIG_PREFIX}/$1" \
+              --query "Parameter.Value" \
+              --output text
+          }
+
+          {
+            echo "api_base_url=$(get_parameter api_base_url)"
+            echo "user_pool_id=$(get_parameter cognito_user_pool_id)"
+            echo "app_client_id=$(get_parameter cognito_app_client_id)"
+            echo "amplify_app_id=$(get_parameter amplify_app_id)"
+            echo "amplify_branch=$(get_parameter amplify_branch_name)"
+            echo "products_lambda=$(get_parameter products_lambda_name)"
+            echo "reviews_lambda=$(get_parameter reviews_lambda_name)"
+            echo "orders_lambda=$(get_parameter orders_lambda_name)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build frontend
+        env:
+          VITE_API_BASE_URL: ${{ steps.config.outputs.api_base_url }}
+          VITE_COGNITO_USER_POOL_ID: ${{ steps.config.outputs.user_pool_id }}
+          VITE_COGNITO_USER_POOL_CLIENT_ID: ${{ steps.config.outputs.app_client_id }}
+        run: |
+          npm ci --ignore-scripts
+          npm run build
+
+      - name: Package Lambda backend
+        shell: bash
+        run: |
+          npm --prefix backend ci --omit=dev --ignore-scripts
+          (cd backend && zip -qr "$RUNNER_TEMP/ecom-backend.zip" src package.json node_modules)
+
+      - name: Deploy Lambda code
+        shell: bash
+        env:
+          PRODUCTS_LAMBDA: ${{ steps.config.outputs.products_lambda }}
+          REVIEWS_LAMBDA: ${{ steps.config.outputs.reviews_lambda }}
+          ORDERS_LAMBDA: ${{ steps.config.outputs.orders_lambda }}
+        run: |
+          for function_name in "$PRODUCTS_LAMBDA" "$REVIEWS_LAMBDA" "$ORDERS_LAMBDA"; do
+            aws lambda update-function-code \
+              --function-name "$function_name" \
+              --zip-file "fileb://$RUNNER_TEMP/ecom-backend.zip" \
+              --no-cli-pager > /dev/null
+            aws lambda wait function-updated-v2 --function-name "$function_name"
+          done
+
+      - name: Package Amplify frontend
+        shell: bash
+        run: (cd dist && zip -qr "$RUNNER_TEMP/ecom-frontend.zip" .)
+
+      - name: Deploy Amplify frontend
+        shell: bash
+        env:
+          AMPLIFY_APP_ID: ${{ steps.config.outputs.amplify_app_id }}
+          AMPLIFY_BRANCH: ${{ steps.config.outputs.amplify_branch }}
+        run: |
+          deployment="$(aws amplify create-deployment \
+            --app-id "$AMPLIFY_APP_ID" \
+            --branch-name "$AMPLIFY_BRANCH" \
+            --query '[jobId,zipUploadUrl]' \
+            --output text)"
+          read -r job_id upload_url <<< "$deployment"
+
+          curl --fail --silent --show-error \
+            --request PUT \
+            --upload-file "$RUNNER_TEMP/ecom-frontend.zip" \
+            "$upload_url"
+
+          aws amplify start-deployment \
+            --app-id "$AMPLIFY_APP_ID" \
+            --branch-name "$AMPLIFY_BRANCH" \
+            --job-id "$job_id" \
+            --no-cli-pager > /dev/null
+
+          for _ in $(seq 1 60); do
+            status="$(aws amplify get-job \
+              --app-id "$AMPLIFY_APP_ID" \
+              --branch-name "$AMPLIFY_BRANCH" \
+              --job-id "$job_id" \
+              --query 'job.summary.status' \
+              --output text)"
+
+            case "$status" in
+              SUCCEED)
+                echo "Amplify deployment succeeded."
+                exit 0
+                ;;
+              FAILED|CANCELLED)
+                echo "Amplify deployment ended with status: $status"
+                exit 1
+                ;;
+            esac
+            sleep 10
+          done
+
+          echo "Amplify deployment did not finish before the workflow timeout."
+          exit 1
