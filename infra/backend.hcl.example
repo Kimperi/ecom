@@ -1,0 +1,5 @@
+bucket       = "replace-with-bootstrap-output"
+region       = "eu-west-3"
+key          = "ecom/dev/terraform.tfstate"
+encrypt      = true
+use_lockfile = true
