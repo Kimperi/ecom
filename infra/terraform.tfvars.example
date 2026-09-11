@@ -1,0 +1,18 @@
+aws_region  = "eu-west-3"
+aws_profile = "your-local-profile"
+environment = "dev"
+
+# First apply: keep this placeholder. Then copy the amplify_url output here and
+# apply again so API Gateway permits only the real frontend origin.
+frontend_origins = ["https://replace-after-first-apply.invalid"]
+
+ses_source_email            = "sender@example.com"
+seller_notification_email   = "seller@example.com"
+delivery_fee_minor          = 5000
+currency                    = "MAD"
+log_retention_days          = 14
+lambda_reserved_concurrency = 5
+
+additional_tags = {
+  Owner = "your-name"
+}
