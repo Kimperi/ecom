@@ -1,9 +1,9 @@
 import { fetchAuthSession } from "@aws-amplify/auth";
 import { API_BASE_URL } from "../config";
 
-async function authHeader() {
+async function authHeader(forceRefresh = false) {
   try {
-    const session = await fetchAuthSession();
+    const session = await fetchAuthSession({ forceRefresh });
     const token =
       session?.tokens?.accessToken?.toString() ||
       session?.tokens?.idToken?.toString() ||
@@ -12,6 +12,19 @@ async function authHeader() {
   } catch {
     return {};
   }
+}
+
+async function requestUploadPermission(file, forceRefresh = false) {
+  const authorization = await authHeader(forceRefresh);
+  if (!authorization.Authorization) {
+    throw new Error("Your session has expired. Please sign in again.");
+  }
+
+  return fetch(`${API_BASE_URL}/uploads`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authorization },
+    body: JSON.stringify({ contentType: file.type, size: file.size }),
+  });
 }
 
 export async function listProducts() {
@@ -47,16 +60,13 @@ export async function createProduct(product) {
 }
 
 export async function uploadProductImage(file) {
-  const authorization = await authHeader();
-  if (!authorization.Authorization) {
-    throw new Error("Your session has expired. Please sign in again.");
-  }
+  let permissionResponse = await requestUploadPermission(file);
 
-  const permissionResponse = await fetch(`${API_BASE_URL}/uploads`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", ...authorization },
-    body: JSON.stringify({ contentType: file.type, size: file.size }),
-  });
+  // Cognito group changes appear only in newly issued tokens. Refresh once so
+  // a recently promoted administrator does not have to clear browser storage.
+  if (permissionResponse.status === 403) {
+    permissionResponse = await requestUploadPermission(file, true);
+  }
 
   if (!permissionResponse.ok) {
     throw new Error(`Upload authorization failed (${permissionResponse.status})`);

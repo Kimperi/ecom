@@ -214,6 +214,19 @@ test("creates an upload permission only for an administrator", async () => {
   );
 });
 
+test("accepts the bracketed Cognito group format from API Gateway", async () => {
+  const { handler } = createTestHandler();
+  const response = await handler(
+    apiEvent("POST", {
+      routeKey: "POST /uploads",
+      claims: adminClaims("[admin]"),
+      body: { contentType: "image/png", size: 2_048 },
+    }),
+  );
+
+  assert.equal(response.statusCode, 201);
+});
+
 test("updates an existing product and reports a missing product", async () => {
   const existing = createTestHandler();
   const missing = createTestHandler({ update: async () => null });

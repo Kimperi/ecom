@@ -24,8 +24,9 @@ function parseGroups(value) {
   }
 
   return value
+    .replace(/^\[|\]$/g, "")
     .split(",")
-    .map((group) => group.trim())
+    .map((group) => group.trim().replace(/^["']|["']$/g, ""))
     .filter(Boolean);
 }
 
