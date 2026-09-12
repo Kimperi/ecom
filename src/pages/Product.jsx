@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useParams, Link } from "react-router-dom";
 import { ShopContext } from "../context/ShopContext";
 
@@ -76,7 +82,7 @@ export default function Product() {
     }
   }, [productId, products]);
 
-  const loadReviews = async () => {
+  const loadReviews = useCallback(async () => {
     try {
       setLoadingReviews(true);
       const url = `${REVIEWS_API}?productId=${encodeURIComponent(productId)}`;
@@ -88,7 +94,7 @@ export default function Product() {
     } finally {
       setLoadingReviews(false);
     }
-  };
+  }, [productId]);
 
   const submitReview = async (e) => {
     e.preventDefault();
@@ -147,7 +153,7 @@ export default function Product() {
 
   useEffect(() => {
     if (productId) loadReviews();
-  }, [productId]);
+  }, [productId, loadReviews]);
 
   useEffect(() => {
     fetchAuthSession()

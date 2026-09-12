@@ -1,4 +1,10 @@
-import { createContext, useState, useEffect, useMemo } from "react";
+import {
+  createContext,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { listProducts } from "../lib/productsApi"; // ← API source of truth
@@ -11,7 +17,7 @@ const ShopContextProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
-  async function refreshProducts() {
+  const refreshProducts = useCallback(async () => {
     try {
       setLoadingProducts(true);
       const data = await listProducts();
@@ -22,11 +28,11 @@ const ShopContextProvider = ({ children }) => {
     } finally {
       setLoadingProducts(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     refreshProducts(); // load once on app start
-  }, []);
+  }, [refreshProducts]);
 
   // ----- cart persisted in localStorage -----
   const [cartItems, setCartItems] = useState(() => {
@@ -45,7 +51,7 @@ const ShopContextProvider = ({ children }) => {
     }
   }, [cartItems]);
 
-  const addToCart = (itemId, size) => {
+  const addToCart = useCallback((itemId, size) => {
     if (!size) {
       toast.error("Please select a size");
       return;
@@ -58,9 +64,9 @@ const ShopContextProvider = ({ children }) => {
     }
     setCartItems(cartData);
     toast.success("Item added to cart!");
-  };
+  }, [cartItems]);
 
-  const getCartCount = () => {
+  const getCartCount = useCallback(() => {
     let count = 0;
     for (const id in cartItems) {
       const sizes = cartItems[id] || {};
@@ -70,26 +76,26 @@ const ShopContextProvider = ({ children }) => {
       }
     }
     return count;
-  };
+  }, [cartItems]);
 
-  const updateQuantity = (itemId, size, quantity) => {
+  const updateQuantity = useCallback((itemId, size, quantity) => {
     const q = Math.max(1, Number(quantity) || 1);
     const cartData = structuredClone(cartItems);
     if (!cartData[itemId]) cartData[itemId] = {};
     cartData[itemId][size] = q;
     setCartItems(cartData);
-  };
+  }, [cartItems]);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCartItems({});
     try {
       localStorage.setItem("cart", JSON.stringify({}));
     } catch {
       // Storage may be unavailable; React state was still cleared.
     }
-  };
+  }, []);
 
-  const finishOrder = () => clearCart();
+  const finishOrder = useCallback(() => clearCart(), [clearCart]);
 
   const currency = "MAD";
   const deliveryFee = 50;
@@ -116,7 +122,20 @@ const ShopContextProvider = ({ children }) => {
       deliveryFee,
       navigate,
     }),
-    [products, loadingProducts, cartItems, currency, deliveryFee, navigate]
+    [
+      products,
+      loadingProducts,
+      refreshProducts,
+      cartItems,
+      addToCart,
+      getCartCount,
+      updateQuantity,
+      clearCart,
+      finishOrder,
+      currency,
+      deliveryFee,
+      navigate,
+    ]
   );
 
   return <ShopContext.Provider value={value}>{children}</ShopContext.Provider>;
