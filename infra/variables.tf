@@ -87,13 +87,16 @@ variable "log_retention_days" {
 }
 
 variable "lambda_reserved_concurrency" {
-  description = "Per-function concurrency cap to control abuse and cost."
+  description = "Per-function concurrency cap. Use -1 to use unreserved account concurrency."
   type        = number
-  default     = 5
+  default     = -1
 
   validation {
-    condition     = var.lambda_reserved_concurrency >= 1
-    error_message = "Reserved concurrency must be at least 1."
+    condition = (
+      var.lambda_reserved_concurrency == -1 ||
+      var.lambda_reserved_concurrency >= 1
+    )
+    error_message = "Reserved concurrency must be -1 or at least 1."
   }
 }
 

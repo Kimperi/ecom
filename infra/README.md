@@ -56,7 +56,7 @@ terraform output -raw state_kms_key_arn
 
 Edit the ignored `terraform.tfvars` with the region/profile you use. Copy the
 bucket and KMS outputs into an ignored `infra/backend.hcl` based on
-`backend.hcl.example`.
+`backend.hcl.example`, and set its `profile` to the same local AWS CLI profile.
 
 The bootstrap state remains local and ignored. Back it up securely because it
 is the state that owns the remote-state bucket.
