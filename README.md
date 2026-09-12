@@ -54,6 +54,9 @@ Terraform ------ remote encrypted state ------> AWS infrastructure
   privileged operations.
 - The media bucket blocks public access. Only the CloudFront distribution can
   read `products/*`, and only the Products Lambda can authorize writes there.
+- Product images use SSE-S3 encryption. A dedicated KMS key and CloudFront WAF
+  are documented risk acceptances for this low-traffic, short-lived portfolio
+  environment to avoid fixed monthly charges; production would reassess both.
 - Product and order input is validated server-side. Prices and totals are
   calculated from trusted database records.
 - IAM roles follow least privilege and logs have limited retention.

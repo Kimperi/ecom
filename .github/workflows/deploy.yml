@@ -6,6 +6,7 @@ on:
     paths:
       - ".github/workflows/deploy.yml"
       - "backend/**"
+      - "infra/**"
       - "index.html"
       - "package-lock.json"
       - "package.json"

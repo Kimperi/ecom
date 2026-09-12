@@ -33,6 +33,10 @@ resource "aws_s3_bucket_versioning" "media" {
   }
 }
 
+# Risk accepted for this short-lived portfolio environment: product images are
+# public business data once delivered by CloudFront. SSE-S3 still encrypts them
+# at rest and avoids the fixed cost and key-policy complexity of a dedicated CMK.
+#trivy:ignore:AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "media" {
   bucket = aws_s3_bucket.media.id
 
@@ -90,6 +94,10 @@ resource "aws_cloudfront_origin_access_control" "media" {
   signing_protocol                  = "sigv4"
 }
 
+# Risk accepted for this low-traffic portfolio environment: this distribution
+# serves only immutable static images with GET/HEAD, from a private OAC origin.
+# A dedicated WAF would add a recurring charge disproportionate to this threat.
+#trivy:ignore:AWS-0011
 resource "aws_cloudfront_distribution" "media" {
   enabled         = true
   is_ipv6_enabled = true

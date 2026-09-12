@@ -31,6 +31,9 @@ import, change, or delete old manually created resources.
   file type and a 5 MB limit, while CloudFront OAC is the only public read path.
 - The media bucket uses S3-managed encryption to avoid another fixed KMS key
   charge. Old object versions and incomplete uploads have lifecycle cleanup.
+- Trivy's dedicated-KMS and CloudFront-WAF checks are suppressed only on these
+  two resources with inline rationale. The CDN serves immutable public product
+  images through a private origin; a production threat model may require both.
 - DynamoDB on-demand billing, encryption, and point-in-time recovery.
 - ARM Lambda functions with a small memory allocation and concurrency cap.
 - API throttling and short CloudWatch log retention.
