@@ -20,6 +20,8 @@ locals {
   lambda_environment = {
     products = {
       PRODUCTS_TABLE_NAME = aws_dynamodb_table.products.name
+      MEDIA_BUCKET_NAME   = aws_s3_bucket.media.bucket
+      MEDIA_CDN_BASE_URL  = "https://${aws_cloudfront_distribution.media.domain_name}"
     }
     reviews = {
       PRODUCTS_TABLE_NAME = aws_dynamodb_table.products.name

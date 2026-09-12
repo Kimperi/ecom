@@ -31,6 +31,11 @@ locals {
         ]
         Resource = [aws_dynamodb_table.products.arn]
       },
+      {
+        Effect   = "Allow"
+        Action   = ["s3:PutObject"]
+        Resource = ["${aws_s3_bucket.media.arn}/products/*"]
+      },
     ]
     reviews = [
       {

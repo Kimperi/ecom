@@ -46,6 +46,39 @@ export async function createProduct(product) {
   return response.json();
 }
 
+export async function uploadProductImage(file) {
+  const authorization = await authHeader();
+  if (!authorization.Authorization) {
+    throw new Error("Your session has expired. Please sign in again.");
+  }
+
+  const permissionResponse = await fetch(`${API_BASE_URL}/uploads`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authorization },
+    body: JSON.stringify({ contentType: file.type, size: file.size }),
+  });
+
+  if (!permissionResponse.ok) {
+    throw new Error(`Upload authorization failed (${permissionResponse.status})`);
+  }
+
+  const { uploadUrl, fields, assetUrl } = await permissionResponse.json();
+  const formData = new FormData();
+  Object.entries(fields).forEach(([key, value]) => formData.append(key, value));
+  formData.append("file", file);
+
+  const uploadResponse = await fetch(uploadUrl, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!uploadResponse.ok) {
+    throw new Error(`Image upload failed (${uploadResponse.status})`);
+  }
+
+  return assetUrl;
+}
+
 export async function updateProduct(id, product) {
   const response = await fetch(
     `${API_BASE_URL}/products/${encodeURIComponent(id)}`,

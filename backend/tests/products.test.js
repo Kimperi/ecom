@@ -15,8 +15,9 @@ const validProduct = Object.freeze({
   bestseller: true,
 });
 
-function apiEvent(method, { id, body, claims } = {}) {
+function apiEvent(method, { id, body, claims, routeKey } = {}) {
   const event = {
+    routeKey,
     requestContext: {
       requestId: "request-123",
       http: { method },
@@ -33,7 +34,7 @@ function adminClaims(groups = '["admin"]') {
   return { sub: "user-123", "cognito:groups": groups };
 }
 
-function createTestHandler(repositoryOverrides = {}) {
+function createTestHandler(repositoryOverrides = {}, mediaOverrides = {}) {
   const repository = {
     list: async () => [],
     get: async () => null,
@@ -47,10 +48,21 @@ function createTestHandler(repositoryOverrides = {}) {
     info: (entry) => logs.info.push(entry),
     error: (entry) => logs.error.push(entry),
   };
+  const media = {
+    createUpload: async () => ({
+      uploadUrl: "https://upload.example.com",
+      fields: { key: "products/image.webp" },
+      assetUrl: "https://cdn.example.com/products/image.webp",
+      expiresIn: 300,
+      maxBytes: 5_242_880,
+    }),
+    ...mediaOverrides,
+  };
 
   return {
     handler: createProductsHandler({
       repository,
+      media,
       clock: () => FIXED_DATE,
       createId: () => "product-123",
       logger,
@@ -164,6 +176,42 @@ test("creates a validated product with server-owned metadata", async () => {
   assert.equal(stored.updatedAt, FIXED_DATE.toISOString());
   assert.equal(logs.info.length, 1);
   assert.equal(logs.info[0].includes("Bearer"), false);
+});
+
+test("creates an upload permission only for an administrator", async () => {
+  let received;
+  const { handler } = createTestHandler({}, {
+    createUpload: async (input) => {
+      received = input;
+      return {
+        uploadUrl: "https://upload.example.com",
+        fields: { key: "products/image.webp" },
+        assetUrl: "https://cdn.example.com/products/image.webp",
+      };
+    },
+  });
+
+  const denied = await handler(
+    apiEvent("POST", {
+      routeKey: "POST /uploads",
+      body: { contentType: "image/webp", size: 1_024 },
+    }),
+  );
+  const allowed = await handler(
+    apiEvent("POST", {
+      routeKey: "POST /uploads",
+      claims: adminClaims(),
+      body: { contentType: "image/webp", size: 1_024 },
+    }),
+  );
+
+  assert.equal(denied.statusCode, 401);
+  assert.equal(allowed.statusCode, 201);
+  assert.deepEqual(received, { contentType: "image/webp", size: 1_024 });
+  assert.equal(
+    responseBody(allowed).assetUrl,
+    "https://cdn.example.com/products/image.webp",
+  );
 });
 
 test("updates an existing product and reports a missing product", async () => {

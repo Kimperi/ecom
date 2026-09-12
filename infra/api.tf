@@ -48,6 +48,10 @@ locals {
       function      = "products"
       authorization = true
     }
+    "POST /uploads" = {
+      function      = "products"
+      authorization = true
+    }
     "PUT /products/{id}" = {
       function      = "products"
       authorization = true

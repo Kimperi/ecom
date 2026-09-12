@@ -56,14 +56,17 @@ function errorResponse(error, requestId) {
 
 export function createProductsHandler({
   repository,
+  media,
   clock = () => new Date(),
   createId = randomUUID,
   logger = console,
 }) {
   if (!repository) throw new Error("A products repository is required.");
+  if (!media) throw new Error("A media upload service is required.");
 
   return async function productsHandler(event) {
     const { requestId, method } = requestMetadata(event);
+    const routeKey = event?.routeKey || event?.requestContext?.routeKey;
     const rawId = event?.pathParameters?.id;
 
     try {
@@ -83,6 +86,16 @@ export function createProductsHandler({
           );
         }
         return jsonResponse(200, product, requestId);
+      }
+
+      if (method === "POST" && routeKey === "POST /uploads") {
+        const principal = requireGroup(event, "admin");
+        const upload = await media.createUpload(parseJsonBody(event, 1_024));
+        logRequest(logger, "product.media-upload.created", {
+          requestId,
+          actorId: principal.id,
+        });
+        return jsonResponse(201, upload, requestId);
       }
 
       if (method === "POST" && !rawId) {

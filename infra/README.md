@@ -11,6 +11,8 @@ Amplify Hosting
 API Gateway HTTP API -- Cognito JWT authorizer
       |
       +-- Products Lambda -- Products DynamoDB table
+      |         |
+      |         +-- presigned POST -- private S3 -- CloudFront OAC
       +-- Reviews Lambda  -- Reviews + Products tables
       +-- Orders Lambda   -- Orders + Products tables -- SES
 ```
@@ -25,6 +27,10 @@ import, change, or delete old manually created resources.
 - No AWS access key, password, token, real email address, or `.tfvars` file committed.
 - Separate least-privilege IAM role for each Lambda.
 - JWT validation at API Gateway and role checks inside the Products Lambda.
+- Administrator-only image uploads use five-minute presigned forms. S3 validates
+  file type and a 5 MB limit, while CloudFront OAC is the only public read path.
+- The media bucket uses S3-managed encryption to avoid another fixed KMS key
+  charge. Old object versions and incomplete uploads have lifecycle cleanup.
 - DynamoDB on-demand billing, encryption, and point-in-time recovery.
 - ARM Lambda functions with a small memory allocation and concurrency cap.
 - API throttling and short CloudWatch log retention.
@@ -95,6 +101,10 @@ The first apply creates Amplify and returns `amplify_url`. Replace the
 `frontend_origins` placeholder in `terraform.tfvars` with that exact URL, then
 run another plan and apply. This avoids permitting every website through CORS.
 
+CloudFront can take several minutes to finish its first deployment. After it is
+ready, the Admin page can upload JPG, PNG, and WebP product images directly to
+the private media bucket. DynamoDB stores only the resulting CloudFront URLs.
+
 ## 4. Create an administrator
 
 First create and confirm the user normally through the React sign-up page. Then
@@ -122,6 +132,10 @@ This removes only resources recorded in this Terraform state. It does not
 remove old manually created AWS resources. Keep the small state bucket for the
 next demonstration, or remove it separately only after every dependent stack
 has been destroyed and its state has been safely archived.
+
+The development media bucket intentionally uses `force_destroy = true`, so
+destroying the stack also deletes every uploaded product image. Do not use that
+setting for irreplaceable production assets.
 
 The customer-managed state key has a small monthly KMS cost. It is used because
 Terraform state can contain sensitive infrastructure data. If the whole

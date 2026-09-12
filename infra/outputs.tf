@@ -37,6 +37,16 @@ output "dynamodb_table_names" {
   }
 }
 
+output "media_bucket_name" {
+  description = "Private S3 bucket that stores product images."
+  value       = aws_s3_bucket.media.bucket
+}
+
+output "media_cdn_base_url" {
+  description = "Public CloudFront base URL used to display product images."
+  value       = "https://${aws_cloudfront_distribution.media.domain_name}"
+}
+
 output "frontend_ssm_parameter_prefix" {
   description = "Parameter Store prefix used later by GitHub Actions without reading Terraform state."
   value       = "/${local.name_prefix}/frontend"

@@ -5,6 +5,7 @@ import {
   updateProduct,
   deleteProduct,
   getProduct,
+  uploadProductImage,
 } from "../lib/productsApi";
 import { toast } from "react-toastify";
 
@@ -25,6 +26,7 @@ export default function Admin() {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(DEFAULT);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [filter, setFilter] = useState("");
   const [editingId, setEditingId] = useState("");
 
@@ -45,6 +47,10 @@ export default function Admin() {
 
   async function onSubmit(e) {
     e.preventDefault();
+    if (uploading) {
+      toast.warn("Wait for the image upload to finish.");
+      return;
+    }
     setSaving(true);
     try {
       const submitData = {
@@ -125,7 +131,52 @@ export default function Admin() {
     }
   }
 
-  const addImage = (val) => onChange("image", [...(form.image || []), val]);
+  async function onImageUpload(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = "";
+    if (files.length === 0) return;
+
+    if ((form.image?.length || 0) + files.length > 8) {
+      toast.warn("A product can contain at most 8 images.");
+      return;
+    }
+
+    const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
+    const invalid = files.find(
+      (file) => !allowedTypes.has(file.type) || file.size > 5 * 1024 * 1024,
+    );
+    if (invalid) {
+      toast.error("Use JPG, PNG or WebP images smaller than 5 MB.");
+      return;
+    }
+
+    setUploading(true);
+    const uploaded = [];
+    try {
+      for (const file of files) {
+        uploaded.push(await uploadProductImage(file));
+      }
+      toast.success(`${uploaded.length} image(s) uploaded securely.`);
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      toast.error(error?.message || "Image upload failed.");
+    } finally {
+      if (uploaded.length > 0) {
+        setForm((current) => ({
+          ...current,
+          image: [...(current.image || []), ...uploaded],
+        }));
+      }
+      setUploading(false);
+    }
+  }
+
+  function removeImage(index) {
+    setForm((current) => ({
+      ...current,
+      image: current.image.filter((_, imageIndex) => imageIndex !== index),
+    }));
+  }
 
   const shown = items.filter(
     (p) => !filter || p.name.toLowerCase().includes(filter.toLowerCase())
@@ -260,51 +311,45 @@ export default function Admin() {
               <label className="text-sm font-semibold text-gray-700">
                 Product Images
               </label>
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-2">
                 <input
-                  id="imgin"
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-gray-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Enter image URL or asset key"
+                  type="file"
+                  multiple
+                  accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+                  disabled={uploading || form.image.length >= 8}
+                  onChange={onImageUpload}
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 file:mr-4 file:rounded-md file:border-0 file:bg-gray-800 file:px-4 file:py-2 file:text-white hover:file:bg-black disabled:opacity-50"
                 />
-                <button
-                  type="button"
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
-                  onClick={() => {
-                    const el = document.getElementById("imgin");
-                    if (el.value) {
-                      addImage(el.value);
-                      toast.success("Image added ");
-                      el.value = "";
-                    } else {
-                      toast.warn("Please enter an image URL first.");
-                    }
-                  }}
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  Add Image
-                </button>
+                <p className="text-xs text-gray-500">
+                  JPG, PNG or WebP only. Maximum 5 MB per image and 8 images
+                  per product.
+                </p>
+                {uploading && (
+                  <p className="text-sm font-medium text-blue-700">
+                    Uploading to secure storage...
+                  </p>
+                )}
               </div>
               {form.image.length > 0 && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <p className="text-sm text-gray-600 mb-2">Current Images:</p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                     {form.image.map((img, index) => (
-                      <span
-                        key={index}
-                        className="bg-white px-3 py-1 rounded-full text-sm border text-gray-700"
-                      >
-                        {img}
-                      </span>
+                      <div key={img} className="relative overflow-hidden rounded-lg border bg-white">
+                        <img
+                          src={img}
+                          alt={`Product preview ${index + 1}`}
+                          className="h-28 w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute right-1 top-1 rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700"
+                          aria-label={`Remove image ${index + 1}`}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -332,10 +377,10 @@ export default function Admin() {
             <div className="flex gap-4 pt-4">
               <button
                 type="submit"
-                disabled={saving}
+                disabled={saving || uploading}
                 className="bg-gradient-to-r from-gray-800 to-gray-900 hover:from-gray-900 hover:to-black text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? (
+                {saving || uploading ? (
                   <>
                     <svg
                       className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
@@ -357,7 +402,7 @@ export default function Admin() {
                         d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                       ></path>
                     </svg>
-                    Saving...
+                    {uploading ? "Uploading images..." : "Saving..."}
                   </>
                 ) : (
                   <>
