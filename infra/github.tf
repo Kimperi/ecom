@@ -84,6 +84,7 @@ data "aws_iam_policy_document" "github_deploy" {
     resources = [
       aws_amplify_app.frontend.arn,
       "${aws_amplify_app.frontend.arn}/branches/${aws_amplify_branch.main.branch_name}",
+      "${aws_amplify_app.frontend.arn}/branches/${aws_amplify_branch.main.branch_name}/deployments/*",
       "${aws_amplify_app.frontend.arn}/branches/${aws_amplify_branch.main.branch_name}/jobs/*",
     ]
   }
